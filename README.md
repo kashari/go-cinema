@@ -4,7 +4,7 @@ This project provides a user-friendly DLNA (Digital Living Network Alliance) fro
 
 **Features**
 
-- **DLNA browsing and interaction:** The frontend allows users to browse and interact with media accessible through a DLNA network.
+- **DLNA browsing and interaction:** The frontend allows users to browse and interact with media files accessible through the network.
 - **File management:** Basic file management operations (e.g., view file details, limited modifications)
 - **Customizable UI:** Built with React and Tailwind CSS for a modern look that can be easily adapted to your preferences.
 - **Robust Backend:** The backend is powered by Golang for efficiency and reliability.
@@ -15,18 +15,7 @@ This project provides a user-friendly DLNA (Digital Living Network Alliance) fro
 
 - Node.js and npm (or yarn)
 - Go (if you want to compile and run the backend)
-- A running DLNA server on your network
-
-**Frontend Installation**
-
-1. Clone this repository: `git clone https://github.com/misenkashari/file-util.git`
-2. Navigate to the frontend directory: `cd front/dlna`
-3. Install dependencies: `npm install` or `yarn install`
-
-**Backend Installation (Optional)**
-
-1. Navigate to the root directory of the project
-2. Build the Go backend: `go build`
+- A running DLNA server on your network (Optional)
 
 **Running the Project**
 
@@ -91,10 +80,6 @@ This project provides a user-friendly DLNA (Digital Living Network Alliance) fro
 - **main.go:** Entry point for the Go backend service
 - **middlewares/logger.go:** Example middleware implementation for Go logging
 - **LICENSE:** Contains the software license information
-
-**Contributing**
-
-We welcome contributions to this project! Please refer to the `CONTRIBUTING.md` file for guidelines on how to get involved.
 
 **License**
 
