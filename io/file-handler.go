@@ -131,3 +131,21 @@ func (f *FileHandler) PercentagePollerOnFile(url string) int64 {
 	value, _ := downloadProgress.Load(url)
 	return int64(value.(float64))
 }
+
+func (f *FileHandler) ServeVideoFile(name string) (*os.File, error) {
+	log.Println("Serving video file", name)
+	file, err := os.Open(f.Root + "/" + name)
+	if err != nil {
+		log.Println("Error opening video file", err)
+		return nil, err
+	}
+	return file, nil
+}
+
+func GetFileSize(file *os.File) int64 {
+	info, err := file.Stat()
+	if err != nil {
+		return 0
+	}
+	return info.Size()
+}

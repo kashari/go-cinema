@@ -4,17 +4,19 @@ import (
 	filehandler "dlna/io"
 	"dlna/middlewares"
 	"io"
+	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	gin.DisableConsoleColor()
+	//gin.DisableConsoleColor()
 	r := gin.Default()
 	r.Use(middlewares.CORSMiddleware())
-	r.Use(middlewares.Logger())
+	//r.Use(middlewares.Logger())
 
 	r.POST("/upload", uploadHandler)
 
@@ -27,6 +29,8 @@ func main() {
 	r.GET("/download", downloadFromInternetHandler)
 
 	r.GET("/percentage", percentageHandler)
+
+	r.GET("/video/:file", videoServerHandler)
 
 	r.Run()
 }
@@ -114,3 +118,40 @@ func percentageHandler(c *gin.Context) {
 	percentage := filehandler.PercentagePollerOnFile(url)
 	c.JSON(http.StatusOK, gin.H{"percentage": percentage})
 }
+
+func videoServerHandler(c *gin.Context) {
+    fileName := c.Param("file")
+    fh := filehandler.FileHandler{Root: "/Media"}
+    file, err := fh.ServeVideoFile(fileName)
+    if err != nil {
+        c.String(http.StatusInternalServerError, "Error opening file: %s", err.Error())
+        return
+    }
+    defer file.Close()
+
+    fileSize := filehandler.GetFileSize(file)
+    handleRangeRequests(c.Writer, c.Request, file, fileSize) 
+}
+
+func handleRangeRequests(w http.ResponseWriter, r *http.Request, file *os.File, fileSize int64) {
+	rangeHeader := r.Header.Get("Range")
+	if rangeHeader == "" {
+		w.Header().Set("Content-Length", strconv.FormatInt(fileSize, 10))
+		fileInfo, err := file.Stat()
+		if err != nil {
+			log.Println("Error getting file info", err)
+			return
+		}
+		http.ServeContent(w, r, file.Name(), fileInfo.ModTime(), file)
+		return
+	}
+
+	fileInfo, err := file.Stat()
+	if err != nil {
+		log.Println("Error getting file info", err)
+		return
+	}
+
+	http.ServeContent(w, r, file.Name(), fileInfo.ModTime(), file)
+}
+

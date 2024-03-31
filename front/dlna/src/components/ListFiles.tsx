@@ -5,6 +5,7 @@ import folder from "../assets/folder.svg";
 import copy from "../assets/paperclip.svg";
 import Modal from "./Modal";
 import Switch from "./Switch";
+import VideoPlayer from "./VideoPlayer";
 
 const ListFiles: React.FC = () => {
   const [files, setFiles] = useState<FileRow[]>([]);
@@ -15,6 +16,9 @@ const ListFiles: React.FC = () => {
   const [downloadProgress, setDownloadProgress] = useState<number>(0);
   const [hasDownloadInProgress, setHasDownloadInProgress] =
     useState<boolean>(false);
+  const [currentFilePlaying, setCurrentFilePlaying] = useState<string>("");
+
+  const [videoOpen, setVideoOpen] = useState(false);
 
   useEffect(() => {
     fetchFiles();
@@ -22,7 +26,7 @@ const ListFiles: React.FC = () => {
 
   const fetchFiles = async () => {
     // using axios to fetch files
-    const response = await axios.get("http://localhost:8080/files");
+    const response = await axios.get("http://192.168.3.150:8080/files");
     setFiles(response.data.files);
   };
 
@@ -32,7 +36,7 @@ const ListFiles: React.FC = () => {
       return;
     }
     console.debug(`Deleting file: ${file}`);
-    axios.delete(`http://localhost:8080/files/${file}`);
+    axios.delete(`http://192.168.3.150:8080/files/${file}`);
     setFiles(files.filter((f) => f.Name !== file));
   };
 
@@ -46,7 +50,7 @@ const ListFiles: React.FC = () => {
     formData.append("file", file);
 
     try {
-      await axios.post("http://localhost:8080/upload", formData, {
+      await axios.post("http://192.168.3.150:8080/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round(
@@ -83,16 +87,26 @@ const ListFiles: React.FC = () => {
 
     try {
       setHasDownloadInProgress(true);
-      axios.get(`http://localhost:8080/download?url=${fileUrl}`);
+      axios.get(`http://192.168.3.150:8080/download?url=${fileUrl}`);
     } catch (error) {
       console.error("Error downloading file", error);
       return;
     }
   };
 
+  const handleVideoOpen = (fileName: string) => {
+    setCurrentFilePlaying(fileName);
+    setVideoOpen(true);
+  };
+
+  const handleVideoClose = () => {
+    setCurrentFilePlaying("");
+    setVideoOpen(false);
+  };
+
   const handleProgress = useCallback(async () => {
     axios
-      .get(`http://localhost:8080/percentage?url=${fileUrl}`)
+      .get(`http://192.168.3.150:8080/percentage?url=${fileUrl}`)
       .then((response) => {
         if (response.data.percentage === 100) {
           setTimeout(() => {
@@ -255,19 +269,37 @@ const ListFiles: React.FC = () => {
                     Delete
                   </button>
                   <a
-                    href={`http://localhost:8080/files/${file.Name}`}
+                    href={`http://192.168.3.150:8080/files/${file.Name}`}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
                     <span className="ml-2">Download</span>
                   </a>
+                  {(file.Name.endsWith(".mp4") ||
+                    file.Name.endsWith(".mov")) && (
+                    <>
+                      <button
+                        key={file.Name}
+                        onClick={() => handleVideoOpen(file.Name)}
+                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-black-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                      >
+                        Play
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </li>
           ))}
         </ul>
       </div>
+      <Modal isOpen={videoOpen} onClose={handleVideoClose}>
+        <VideoPlayer
+          videoEndpoint={"http://192.168.3.150:8080/video"}
+          fileName={currentFilePlaying}
+        />
+      </Modal>
     </>
   );
 };
