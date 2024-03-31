@@ -2,7 +2,6 @@ import React, { ChangeEvent, useCallback, useEffect, useState } from "react";
 import { FileRow } from "../types/file";
 import axios from "axios";
 import folder from "../assets/folder.svg";
-import copy from "../assets/paperclip.svg";
 import Modal from "./Modal";
 import Switch from "./Switch";
 import VideoPlayer from "./VideoPlayer";
@@ -253,47 +252,219 @@ const ListFiles: React.FC = () => {
         )}
       </div>
 
-      <div className="md:flex mt-32 mx-auto justify-center">
-        <ul role="list" className="divide-y divide-gray-100">
-          {files.map((file) => (
-            <li key={file.Name} className="py-4 flex">
-              <img src={copy} alt="copy" className="h-10 w-10" />
-              <div className="ml-3 flex flex-col">
-                <p className="text-sm font-medium text-gray-900">{file.Name}</p>
-                <p className="text-sm text-gray-500">{file.Size}</p>
-                <div className="flex mt-2 gap-2">
-                  <button
-                    onClick={() => handleDelete(file.Name)}
-                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                  >
-                    Delete
-                  </button>
-                  <a
-                    href={`http://192.168.3.150:8080/files/${file.Name}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    <span className="ml-2">Download</span>
-                  </a>
-                  {(file.Name.endsWith(".mp4") ||
-                    file.Name.endsWith(".mov")) && (
-                    <>
-                      <button
-                        key={file.Name}
-                        onClick={() => handleVideoOpen(file.Name)}
-                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-black-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+      <div className="py-16">
+        <div className="mx-auto px-6 max-w-6xl text-gray-500">
+          <div className="text-center">
+            <h2 className="text-3xl text-gray-950 dark:text-white font-semibold">
+              Files inside the /Media direcotiry
+            </h2>
+            <p className="mt-6 text-gray-700 dark:text-gray-300">
+              Options, listed below, are available for each file. You can
+              download, delete, or play video files.
+            </p>
+          </div>
+          <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {files.map((file) => (
+              <div className="relative group overflow-hidden p-8 rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
+                <div
+                  aria-hidden="true"
+                  className="inset-0 absolute aspect-video border rounded-full -translate-y-1/2 group-hover:-translate-y-1/4 duration-300 bg-gradient-to-b from-blue-500 to-white dark:from-white dark:to-white blur-2xl opacity-25 dark:opacity-5 dark:group-hover:opacity-10"
+                ></div>
+                <div className="relative">
+                  <div className="border border-yellow-500/10 flex relative *:relative *:size-6 *:m-auto size-12 rounded-lg dark:bg-gray-900 dark:border-white/15 before:rounded-[7px] before:absolute before:inset-0 before:border-t before:border-white before:from-yellow-100 dark:before:border-white/20 before:bg-gradient-to-b dark:before:from-white/10 dark:before:to-transparent before:shadow dark:before:shadow-gray-950">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="0.73em"
+                      height="1em"
+                      viewBox="0 0 256 351"
+                    >
+                      <defs>
+                        <filter
+                          id="logosFirebase0"
+                          width="200%"
+                          height="200%"
+                          x="-50%"
+                          y="-50%"
+                          filterUnits="objectBoundingBox"
+                        >
+                          <feGaussianBlur
+                            in="SourceAlpha"
+                            result="shadowBlurInner1"
+                            stdDeviation="17.5"
+                          ></feGaussianBlur>
+                          <feOffset
+                            in="shadowBlurInner1"
+                            result="shadowOffsetInner1"
+                          ></feOffset>
+                          <feComposite
+                            in="shadowOffsetInner1"
+                            in2="SourceAlpha"
+                            k2="-1"
+                            k3="1"
+                            operator="arithmetic"
+                            result="shadowInnerInner1"
+                          ></feComposite>
+                          <feColorMatrix
+                            in="shadowInnerInner1"
+                            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.06 0"
+                          ></feColorMatrix>
+                        </filter>
+                        <filter
+                          id="logosFirebase1"
+                          width="200%"
+                          height="200%"
+                          x="-50%"
+                          y="-50%"
+                          filterUnits="objectBoundingBox"
+                        >
+                          <feGaussianBlur
+                            in="SourceAlpha"
+                            result="shadowBlurInner1"
+                            stdDeviation="3.5"
+                          ></feGaussianBlur>
+                          <feOffset
+                            dx="1"
+                            dy="-9"
+                            in="shadowBlurInner1"
+                            result="shadowOffsetInner1"
+                          ></feOffset>
+                          <feComposite
+                            in="shadowOffsetInner1"
+                            in2="SourceAlpha"
+                            k2="-1"
+                            k3="1"
+                            operator="arithmetic"
+                            result="shadowInnerInner1"
+                          ></feComposite>
+                          <feColorMatrix
+                            in="shadowInnerInner1"
+                            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.09 0"
+                          ></feColorMatrix>
+                        </filter>
+                        <path
+                          id="logosFirebase2"
+                          d="m1.253 280.732l1.605-3.131l99.353-188.518l-44.15-83.475C54.392-1.283 45.074.474 43.87 8.188z"
+                        ></path>
+                        <path
+                          id="logosFirebase3"
+                          d="m134.417 148.974l32.039-32.812l-32.039-61.007c-3.042-5.791-10.433-6.398-13.443-.59l-17.705 34.109l-.53 1.744z"
+                        ></path>
+                      </defs>
+                      <path
+                        fill="#ffc24a"
+                        d="m0 282.998l2.123-2.972L102.527 89.512l.212-2.017L58.48 4.358C54.77-2.606 44.33-.845 43.114 6.951z"
+                      ></path>
+                      <use
+                        fill="#ffa712"
+                        fill-rule="evenodd"
+                        href="#logosFirebase2"
+                      ></use>
+                      <use
+                        filter="url(#logosFirebase0)"
+                        href="#logosFirebase2"
+                      ></use>
+                      <path
+                        fill="#f4bd62"
+                        d="m135.005 150.38l32.955-33.75l-32.965-62.93c-3.129-5.957-11.866-5.975-14.962 0L102.42 87.287v2.86z"
+                      ></path>
+                      <use
+                        fill="#ffa50e"
+                        fill-rule="evenodd"
+                        href="#logosFirebase3"
+                      ></use>
+                      <use
+                        filter="url(#logosFirebase1)"
+                        href="#logosFirebase3"
+                      ></use>
+                      <path
+                        fill="#f6820c"
+                        d="m0 282.998l.962-.968l3.496-1.42l128.477-128l1.628-4.431l-32.05-61.074z"
+                      ></path>
+                      <path
+                        fill="#fde068"
+                        d="m139.121 347.551l116.275-64.847l-33.204-204.495c-1.039-6.398-8.888-8.927-13.468-4.34L0 282.998l115.608 64.548a24.126 24.126 0 0 0 23.513.005"
+                      ></path>
+                      <path
+                        fill="#fcca3f"
+                        d="M254.354 282.16L221.402 79.218c-1.03-6.35-7.558-8.977-12.103-4.424L1.29 282.6l114.339 63.908a23.943 23.943 0 0 0 23.334.006z"
+                      ></path>
+                      <path
+                        fill="#eeab37"
+                        d="M139.12 345.64a24.126 24.126 0 0 1-23.512-.005L.931 282.015l-.93.983l115.607 64.548a24.126 24.126 0 0 0 23.513.005l116.275-64.847l-.285-1.752z"
+                      ></path>
+                    </svg>
+                  </div>
+                  <div className="mt-6 pb-6 rounded-b-[--card-border-radius]">
+                    <p className="text-gray-700 dark:text-gray-300">
+                      {file.Name} ({file.Size})
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3 -mb-8 py-4 border-t border-gray-200 dark:border-gray-800">
+                    <a
+                      href={`http://192.168.3.150:8080/files/${file.Name}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="group rounded-xl disabled:border *:select-none [&>*:not(.sr-only)]:relative *:disabled:opacity-20 disabled:text-gray-950 disabled:border-gray-200 disabled:bg-gray-100 dark:disabled:border-gray-800/50 disabled:dark:bg-gray-900 dark:*:disabled:!text-white text-gray-950 bg-gray-100 hover:bg-gray-200/75 active:bg-gray-100 dark:text-white dark:bg-gray-500/10 dark:hover:bg-gray-500/15 dark:active:bg-gray-500/10 flex gap-1.5 items-center text-sm h-8 px-3.5 justify-center"
+                    >
+                      <span>Download</span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="1em"
+                        height="1em"
+                        viewBox="0 0 24 24"
                       >
-                        Play
-                      </button>
-                    </>
-                  )}
+                        <path
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="m17 13l-5 5m0 0l-5-5m5 5V6"
+                        ></path>
+                      </svg>
+                    </a>
+
+                    <span
+                      style={{ cursor: "pointer" }}
+                      onClick={() => handleDelete(file.Name)}
+                      className="group rounded-xl disabled:border *:select-none [&>*:not(.sr-only)]:relative *:disabled:opacity-20 disabled:text-gray-950 disabled:border-gray-200 disabled:bg-gray-100 dark:disabled:border-gray-800/50 disabled:dark:bg-gray-900 dark:*:disabled:!text-white text-gray-950 bg-gray-100 hover:bg-gray-200/75 active:bg-gray-100 dark:text-white dark:bg-gray-500/10 dark:hover:bg-gray-500/15 dark:active:bg-gray-500/10 flex gap-1.5 items-center text-sm h-8 px-3.5 justify-center"
+                    >
+                      <span>Delete</span>
+                      &times;
+                    </span>
+                    {new RegExp(
+                      [".mp4", ".MP4", ".mov", ".MOV", ".mpeg", ".MPEG"].join(
+                        "|"
+                      )
+                    ).test(file.Name) && (
+                      <span
+                        onClick={() => handleVideoOpen(file.Name)}
+                        style={{ cursor: "pointer" }}
+                        className="group flex items-center rounded-xl disabled:border *:select-none [&>*:not(.sr-only)]:relative *:disabled:opacity-20 disabled:text-gray-950 disabled:border-gray-200 disabled:bg-gray-100 dark:disabled:border-gray-800/50 disabled:dark:bg-gray-900 dark:*:disabled:!text-white text-gray-950 bg-gray-100 hover:bg-gray-200/75 active:bg-gray-100 dark:text-white dark:bg-gray-500/10 dark:hover:bg-gray-500/15 dark:active:bg-gray-500/10 size-8 justify-center"
+                      >
+                        <span className="sr-only">Play</span>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width={24}
+                          height={24}
+                          viewBox="0 0 384 512"
+                        >
+                          <path
+                            fill="#FFD43B"
+                            d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"
+                          />
+                        </svg>
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </li>
-          ))}
-        </ul>
+            ))}
+          </div>
+        </div>
       </div>
+
       <Modal isOpen={videoOpen} onClose={handleVideoClose}>
         <VideoPlayer
           videoEndpoint={"http://192.168.3.150:8080/video"}

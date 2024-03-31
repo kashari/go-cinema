@@ -40,15 +40,18 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     };
 
     const handleTimeUpdate = () => {
-      if (!videoElement || fetching) return;
+      if (!videoElement) return;
 
-      const bufferedEnd = videoElement.buffered.end(0);
+      const bufferedLength = videoElement.buffered.length;
+      if (bufferedLength === 0 || fetching) return;
+
+      const bufferedEnd = videoElement.buffered.end(bufferedLength - 1);
       const currentTime = videoElement.currentTime;
       const remainingBuffer = bufferedEnd - currentTime;
 
       if (remainingBuffer < 10 && currentTime >= nextChunkEnd) {
         currentChunkStart = nextChunkEnd;
-        nextChunkEnd = currentChunkStart + 500 * 1024; // 500KB chunk size
+        nextChunkEnd = currentChunkStart + 500 * 1024; // 500KB
         fetchVideoChunk(currentChunkStart, nextChunkEnd);
       }
     };
