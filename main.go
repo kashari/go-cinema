@@ -13,10 +13,10 @@ import (
 )
 
 func main() {
-	//gin.DisableConsoleColor()
+	gin.DisableConsoleColor()
 	r := gin.Default()
 	r.Use(middlewares.CORSMiddleware())
-	//r.Use(middlewares.Logger())
+	r.Use(middlewares.Logger())
 
 	r.POST("/upload", uploadHandler)
 
