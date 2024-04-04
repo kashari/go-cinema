@@ -23,15 +23,26 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const fetchVideoChunk = async (rangeStart: number, rangeEnd: number) => {
       fetching = true;
       try {
-        const headers = { Range: `bytes=${rangeStart}-${rangeEnd}` };
-        const response = await fetch(`${videoEndpoint}/${fileName}`, {
-          headers,
-        });
+        const headers: { Range: string } = {
+          Range: `bytes=${rangeStart}-${rangeEnd}`,
+        };
+
+        const response = await fetch(
+          `${videoEndpoint}/${fileName}?timePlaying=${String(
+            Math.floor(videoElement.currentTime / 60)
+          ).padStart(2, "0")}:${String(
+            Math.floor(videoElement.currentTime % 60)
+          ).padStart(2, "0")}`,
+          {
+            headers,
+          }
+        );
         const videoBlob = await response.blob();
         const videoURL = URL.createObjectURL(videoBlob);
 
         videoElement.src = videoURL;
         videoElement.load();
+
         fetching = false;
       } catch (error) {
         console.error("Error fetching video chunk:", error);
@@ -47,6 +58,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
       const bufferedEnd = videoElement.buffered.end(bufferedLength - 1);
       const currentTime = videoElement.currentTime;
+
       const remainingBuffer = bufferedEnd - currentTime;
 
       if (remainingBuffer < 10 && currentTime >= nextChunkEnd) {

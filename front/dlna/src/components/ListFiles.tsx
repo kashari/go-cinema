@@ -5,6 +5,7 @@ import folder from "../assets/folder.svg";
 import Modal from "./Modal";
 import Switch from "./Switch";
 import VideoPlayer from "./VideoPlayer";
+import { VideoStatus } from "../types/video-status";
 
 const ListFiles: React.FC = () => {
   const [files, setFiles] = useState<FileRow[]>([]);
@@ -16,12 +17,19 @@ const ListFiles: React.FC = () => {
   const [hasDownloadInProgress, setHasDownloadInProgress] =
     useState<boolean>(false);
   const [currentFilePlaying, setCurrentFilePlaying] = useState<string>("");
+  const [lastWatch, setLastWatch] = useState<VideoStatus | null>(null);
 
   const [videoOpen, setVideoOpen] = useState(false);
 
   useEffect(() => {
     fetchFiles();
+    handleGetLastUpdate();
   }, []);
+
+  const handleGetLastUpdate = async () => {
+    const response = await axios.get("http://192.168.3.150:8080/last-access");
+    setLastWatch(response.data);
+  };
 
   const fetchFiles = async () => {
     // using axios to fetch files
@@ -101,6 +109,7 @@ const ListFiles: React.FC = () => {
   const handleVideoClose = () => {
     setCurrentFilePlaying("");
     setVideoOpen(false);
+    handleGetLastUpdate();
   };
 
   const handleProgress = useCallback(async () => {
@@ -256,7 +265,9 @@ const ListFiles: React.FC = () => {
         <div className="mx-auto px-6 max-w-6xl text-gray-500">
           <div className="text-center">
             <h2 className="text-3xl text-gray-950 dark:text-white font-semibold">
-              Files inside the /Media direcotiry
+              Last time you watched{" "}
+              <code>{lastWatch?.file.split("/").pop()}</code> and left at{" "}
+              <code>{lastWatch?.minute}</code>.
             </h2>
             <p className="mt-6 text-gray-700 dark:text-gray-300">
               Options, listed below, are available for each file. You can
@@ -265,7 +276,10 @@ const ListFiles: React.FC = () => {
           </div>
           <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {files.map((file) => (
-              <div className="relative group overflow-hidden p-8 rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900">
+              <div
+                key={file.Name}
+                className="relative group overflow-hidden p-8 rounded-xl bg-white border border-gray-200 dark:border-gray-800 dark:bg-gray-900"
+              >
                 <div
                   aria-hidden="true"
                   className="inset-0 absolute aspect-video border rounded-full -translate-y-1/2 group-hover:-translate-y-1/4 duration-300 bg-gradient-to-b from-blue-500 to-white dark:from-white dark:to-white blur-2xl opacity-25 dark:opacity-5 dark:group-hover:opacity-10"
@@ -356,7 +370,7 @@ const ListFiles: React.FC = () => {
                       ></path>
                       <use
                         fill="#ffa712"
-                        fill-rule="evenodd"
+                        fillRule="evenodd"
                         href="#logosFirebase2"
                       ></use>
                       <use
@@ -369,7 +383,7 @@ const ListFiles: React.FC = () => {
                       ></path>
                       <use
                         fill="#ffa50e"
-                        fill-rule="evenodd"
+                        fillRule="evenodd"
                         href="#logosFirebase3"
                       ></use>
                       <use
@@ -417,9 +431,9 @@ const ListFiles: React.FC = () => {
                         <path
                           fill="none"
                           stroke="currentColor"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
                           d="m17 13l-5 5m0 0l-5-5m5 5V6"
                         ></path>
                       </svg>

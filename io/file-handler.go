@@ -1,6 +1,7 @@
 package filehandler
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -13,6 +14,7 @@ import (
 
 var (
 	downloadProgress = syncmap.Map{}
+	usageData = "/application/logs/usage_data.io"
 )
 
 type FileHandler struct {
@@ -24,6 +26,7 @@ type FileRow struct {
 	Name string
 	Size string
 }
+
 
 func MergeSortByNames(files []FileRow) []FileRow {
 	if len(files) <= 1 {
@@ -160,6 +163,32 @@ func (f *FileHandler) DownloadFromInternet(url string) error {
 
 	log.Println("File downloaded successfully")
 	return nil
+}
+
+func UpdateUsageData(data []byte) {
+	file, err := os.Create(usageData)
+	if err != nil {
+		fmt.Println("Something went wrong updating the data: ", err)
+	}
+
+	file.Write(data)
+	fmt.Println("Last access watching updated.")
+}
+
+func GetUsageData() map[string]string {
+	file, err := os.Open(usageData)
+	if err != nil {
+		fmt.Println("Something went wrong reading the data: ", err)
+	}
+
+	data := make(map[string]string)
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&data)
+	if err != nil {
+		fmt.Println("Something went wrong decoding the data: ", err)
+	}
+
+	return data
 }
 
 func (f *FileHandler) PercentagePollerOnFile(url string) int64 {

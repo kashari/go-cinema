@@ -3,6 +3,7 @@ package main
 import (
 	filehandler "dlna/io"
 	"dlna/middlewares"
+	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -32,13 +33,15 @@ func main() {
 
 	r.GET("/video/:file", videoServerHandler)
 
+	r.GET("/last-access", handleLastAccessData)
+
 	r.Run()
 }
 
 func uploadHandler(c *gin.Context) {
 
 	// Set a reasonable maximum file size for uploads
-	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 2<<30) // 2GB
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 5<<30) // 2GB
 
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
@@ -135,6 +138,8 @@ func videoServerHandler(c *gin.Context) {
 
 func handleRangeRequests(w http.ResponseWriter, r *http.Request, file *os.File, fileSize int64) {
 	rangeHeader := r.Header.Get("Range")
+	timePlaying := r.URL.Query().Get("timePlaying")
+
 	if rangeHeader == "" {
 		w.Header().Set("Content-Length", strconv.FormatInt(fileSize, 10))
 		fileInfo, err := file.Stat()
@@ -152,6 +157,24 @@ func handleRangeRequests(w http.ResponseWriter, r *http.Request, file *os.File, 
 		return
 	}
 
+	fileData := map[string]string{
+		"file":   file.Name(),
+		"minute": timePlaying,
+	}
+
+	jsonData, err := json.Marshal(fileData)
+	if err != nil {
+		log.Println("Error marshalling file data", err)
+	}
+
+	filehandler.UpdateUsageData(jsonData)
+
+
 	http.ServeContent(w, r, file.Name(), fileInfo.ModTime(), file)
+}
+
+func handleLastAccessData(c *gin.Context) {
+	data := filehandler.GetUsageData()
+	c.JSON(http.StatusOK, data)
 }
 
