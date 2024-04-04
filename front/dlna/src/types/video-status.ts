@@ -1,4 +1,4 @@
 export interface VideoStatus {
-  file: string;
-  minute: string;
+  fileMinute: string;
+  fileName: string;
 }

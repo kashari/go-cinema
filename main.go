@@ -35,13 +35,15 @@ func main() {
 
 	r.GET("/last-access", handleLastAccessData)
 
+	r.POST("/last-access", handleUpdateLastAccessData)
+
 	r.Run()
 }
 
 func uploadHandler(c *gin.Context) {
 
 	// Set a reasonable maximum file size for uploads
-	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 5<<30) // 2GB
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 5<<30) // 5GB
 
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
@@ -138,7 +140,6 @@ func videoServerHandler(c *gin.Context) {
 
 func handleRangeRequests(w http.ResponseWriter, r *http.Request, file *os.File, fileSize int64) {
 	rangeHeader := r.Header.Get("Range")
-	timePlaying := r.URL.Query().Get("timePlaying")
 
 	if rangeHeader == "" {
 		w.Header().Set("Content-Length", strconv.FormatInt(fileSize, 10))
@@ -157,24 +158,30 @@ func handleRangeRequests(w http.ResponseWriter, r *http.Request, file *os.File, 
 		return
 	}
 
-	fileData := map[string]string{
-		"file":   file.Name(),
-		"minute": timePlaying,
-	}
-
-	jsonData, err := json.Marshal(fileData)
-	if err != nil {
-		log.Println("Error marshalling file data", err)
-	}
-
-	filehandler.UpdateUsageData(jsonData)
-
-
 	http.ServeContent(w, r, file.Name(), fileInfo.ModTime(), file)
 }
 
 func handleLastAccessData(c *gin.Context) {
 	data := filehandler.GetUsageData()
 	c.JSON(http.StatusOK, data)
+}
+
+
+func handleUpdateLastAccessData(c *gin.Context) {
+
+	var body map[string]string
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.String(http.StatusBadRequest, "Error binding JSON: %s", err.Error())
+		return
+	}
+
+	data, err := json.Marshal(body)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Error marshalling data: %s", err.Error())
+		return
+	}
+
+	filehandler.UpdateUsageData(data)
+	c.JSON(http.StatusOK, "Data updated successfully")
 }
 

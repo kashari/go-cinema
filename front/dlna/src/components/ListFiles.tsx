@@ -107,9 +107,9 @@ const ListFiles: React.FC = () => {
   };
 
   const handleVideoClose = () => {
+    handleGetLastUpdate();
     setCurrentFilePlaying("");
     setVideoOpen(false);
-    handleGetLastUpdate();
   };
 
   const handleProgress = useCallback(async () => {
@@ -265,9 +265,8 @@ const ListFiles: React.FC = () => {
         <div className="mx-auto px-6 max-w-6xl text-gray-500">
           <div className="text-center">
             <h2 className="text-3xl text-gray-950 dark:text-white font-semibold">
-              Last time you watched{" "}
-              <code>{lastWatch?.file.split("/").pop()}</code> and left at{" "}
-              <code>{lastWatch?.minute}</code>.
+              {lastWatch &&
+                `Last watched video: ${lastWatch.fileName} at ${lastWatch.fileMinute}`}
             </h2>
             <p className="mt-6 text-gray-700 dark:text-gray-300">
               Options, listed below, are available for each file. You can
@@ -483,6 +482,7 @@ const ListFiles: React.FC = () => {
         <VideoPlayer
           videoEndpoint={"http://192.168.3.150:8080/video"}
           fileName={currentFilePlaying}
+          onClose={handleGetLastUpdate}
         />
       </Modal>
     </>

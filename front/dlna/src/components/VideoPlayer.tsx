@@ -1,13 +1,16 @@
+import axios from "axios";
 import React, { useEffect, useRef } from "react";
 
 interface VideoPlayerProps {
   videoEndpoint: string;
   fileName: string;
+  onClose: () => void;
 }
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
   videoEndpoint,
   fileName,
+  onClose,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -27,16 +30,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           Range: `bytes=${rangeStart}-${rangeEnd}`,
         };
 
-        const response = await fetch(
-          `${videoEndpoint}/${fileName}?timePlaying=${String(
-            Math.floor(videoElement.currentTime / 60)
-          ).padStart(2, "0")}:${String(
-            Math.floor(videoElement.currentTime % 60)
-          ).padStart(2, "0")}`,
-          {
-            headers,
-          }
-        );
+        const response = await fetch(`${videoEndpoint}/${fileName}`, {
+          headers,
+        });
         const videoBlob = await response.blob();
         const videoURL = URL.createObjectURL(videoBlob);
 
@@ -72,15 +68,36 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
     return () => {
       videoElement.removeEventListener("timeupdate", handleTimeUpdate);
+      handleLastVideoOpenData(videoElement.currentTime);
+      setTimeout(() => {
+        onClose();
+      }, 1000);
     };
   }, [videoEndpoint, fileName]);
+
+  const handleLastVideoOpenData = async (videoTime: number) => {
+    const fileMinute = `${String(Math.floor(videoTime / 60)).padStart(
+      2,
+      "0"
+    )}:${String(Math.floor(videoTime % 60)).padStart(2, "0")}`;
+
+    console.log("updating video data...", fileName, fileMinute);
+    axios
+      .post("http://localhost:8080/last-access", {
+        fileName,
+        fileMinute,
+      })
+      .then(() => {
+        console.debug("video data updated...");
+      });
+  };
 
   return (
     <div>
       <video
         ref={videoRef}
-        width="640"
-        height="360"
+        width="889"
+        height="560"
         controls
         preload="metadata"
       >
