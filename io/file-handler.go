@@ -25,6 +25,40 @@ type FileRow struct {
 	Size string
 }
 
+func MergeSortByNames(files []FileRow) []FileRow {
+	if len(files) <= 1 {
+		return files
+	}
+
+	mid := len(files) / 2
+	left := MergeSortByNames(files[:mid])
+	right := MergeSortByNames(files[mid:])
+
+	return MergeNames(left, right)
+}
+
+func MergeNames(left, right []FileRow) []FileRow {
+	var result []FileRow
+	l, r := 0, 0
+
+	for l < len(left) && r < len(right) {
+		if left[l].Name < right[r].Name {
+			result = append(result, left[l])
+			l++
+		} else {
+			result = append(result, right[r])
+			r++
+		}
+	}
+
+	result = append(result, left[l:]...)
+	result = append(result, right[r:]...)
+
+	return result
+}
+
+
+
 func (f *FileHandler) ListFiles() []FileRow {
 	log.Println("Listing files in directory", f.Root)
 	dir, err := os.Open(f.Root)
@@ -49,7 +83,8 @@ func (f *FileHandler) ListFiles() []FileRow {
 			fileNames = append(fileNames, FileRow{Name: file.Name(), Size: sizeString})
 		}
 	}
-	return fileNames
+	
+	return MergeSortByNames(fileNames)
 }
 
 func (f *FileHandler) DeleteFile(fileName string) error {
