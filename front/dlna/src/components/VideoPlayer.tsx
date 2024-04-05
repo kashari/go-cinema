@@ -19,6 +19,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
     if (!videoElement) return;
 
+    const timeShifter = setInterval(() => {
+      handleLastVideoOpenData(videoElement.currentTime);
+    }, 60000);
+
     let currentChunkStart = 0;
     let nextChunkEnd = 0;
     let fetching = false;
@@ -30,14 +34,22 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           Range: `bytes=${rangeStart}-${rangeEnd}`,
         };
 
-        const response = await fetch(`${videoEndpoint}/${fileName}`, {
-          headers,
-        });
-        const videoBlob = await response.blob();
-        const videoURL = URL.createObjectURL(videoBlob);
+        const mediaSource = new MediaSource();
+        const videoBuffer = mediaSource.addSourceBuffer(
+          "video/mp4; codecs=avc1.42E01E,mp4a.40.2"
+        );
 
-        videoElement.src = videoURL;
-        videoElement.load();
+        videoBuffer.mode = "sequence";
+
+        await axios
+          .get(`${videoEndpoint}/${fileName}`, {
+            headers,
+            responseType: "blob",
+          })
+          .then((response: any) => {
+            const videoBlob = response.arrayBuffer();
+            videoBuffer.appendBuffer(videoBlob);
+          });
 
         fetching = false;
       } catch (error) {
@@ -59,7 +71,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
       if (remainingBuffer < 10 && currentTime >= nextChunkEnd) {
         currentChunkStart = nextChunkEnd;
-        nextChunkEnd = currentChunkStart + 500 * 1024; // 500KB
+        nextChunkEnd = currentChunkStart + 300 * 1024 + 1; // 300 KB
         fetchVideoChunk(currentChunkStart, nextChunkEnd);
       }
     };
@@ -68,6 +80,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
     return () => {
       videoElement.removeEventListener("timeupdate", handleTimeUpdate);
+      clearInterval(timeShifter);
       handleLastVideoOpenData(videoElement.currentTime);
       setTimeout(() => {
         onClose();
@@ -83,7 +96,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
     console.log("updating video data...", fileName, fileMinute);
     axios
-      .post("http://localhost:8080/last-access", {
+      .post("http://192.168.3.150:8080/last-access", {
         fileName,
         fileMinute,
       })
@@ -96,7 +109,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     <div>
       <video
         ref={videoRef}
-        width="889"
+        width="880"
         height="560"
         controls
         preload="metadata"
