@@ -21,7 +21,7 @@ package main
 // 			// fmt.Println("Creating enum types...")
 // 			// db.Exec("CREATE TYPE user_role AS ENUM ('admin', 'user');")
 
-// 			err = db.AutoMigrate(&theatre.Movie{}, &theatre.Episode{}, &theatre.Series{})
+// 			err = db.AutoMigrate(&theatre.Movie{}, &theatre.Series{}, &theatre.Episode{})
 // 			if err != nil {
 // 				fmt.Printf("Cannot map models to the database due to: %v", err)
 // 				return

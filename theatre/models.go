@@ -20,22 +20,26 @@ type MovieRequest struct {
 	Description string `json:"Description"`
 }
 
+type Series struct {
+	gorm.Model
+	Title        string    `json:"Title"`
+	Description  string    `json:"Description"`
+	BaseDir      string    `json:"BaseDir" gorm:"not null"`
+	Episodes     []Episode `json:"Episodes"`
+	CurrentIndex uint      `json:"CurrentIndex" gorm:"not null"`
+}
+
 type Episode struct {
 	gorm.Model
 	Path         string `json:"Path" gorm:"not null"`
 	ResumeAt     string `json:"ResumeAt"`
 	EpisodeIndex int    `json:"EpisodeIndex" gorm:"not null"`
-	SeriesID     uint   `json:"series_id" gorm:"not null"`
-	Series       Series `json:"Series" gorm:"foreignKey:SeriesID;references:ID"`
+	SeriesID     uint   `json:"series_id"`
 }
 
-type Series struct {
-	gorm.Model
-	Title        string    `json:"Title" gorm:"not null"`
-	Description  string    `json:"Description"`
-	BaseDir      string    `json:"BaseDir" gorm:"not null"`
-	Episodes     []Episode `json:"Episodes" gorm:"foreignKey:SeriesID;references:ID"`
-	CurrentIndex uint      `json:"CurrentIndex" gorm:"not null"`
+type SeriesRequest struct {
+	Title       string `json:"Title"`
+	Description string `json:"Description"`
 }
 
 func ServeVideo(name string) (*os.File, error) {

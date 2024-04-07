@@ -7,6 +7,7 @@ import App from "./App";
 import Management from "./components/Management";
 import SerieList from "./components/series/SerieList";
 import MovieList from "./components/movies/MovieList";
+import EpisodesList from "./components/series/EpisodesList";
 
 export const RootLayout: React.FC = () => {
   return (
@@ -26,6 +27,7 @@ const router = createBrowserRouter([
       { path: "series", element: <SerieList /> },
       { path: "movies", element: <MovieList /> },
       { path: "management", element: <Management /> },
+      { path: "series/:id/episodes", element: <EpisodesList /> },
     ],
   },
 ]);

@@ -64,14 +64,10 @@ const Management: React.FC = () => {
   };
 
   const onSerieSubmit: SubmitHandler<SerieInputs> = (data) => {
-    axios
-      .post("http://localhost:8080/series", {
-        body: data,
-      })
-      .then((response) => {
-        serieReset();
-        console.debug(response.data);
-      });
+    axios.post("http://localhost:8080/series", data).then((response) => {
+      serieReset();
+      console.debug(response.data);
+    });
   };
 
   return (
@@ -86,6 +82,7 @@ const Management: React.FC = () => {
               <div className="row gy-3 mt-2">
                 <div className="col-md-6 col-sm-12 mt-2">
                   <input
+                    required
                     type="text"
                     className="form-control"
                     placeholder="Movie title"
@@ -99,6 +96,7 @@ const Management: React.FC = () => {
                 </div>
                 <div className="col-md-6 col-sm-12 mt-2">
                   <input
+                    required
                     type="text"
                     className="form-control"
                     placeholder="Movie description"
@@ -114,6 +112,7 @@ const Management: React.FC = () => {
               <div className="row mb-4">
                 <div className="col-md-12 col-sm-12">
                   <input
+                    required
                     type="file"
                     className="form-control mt-2"
                     {...register("File")}
@@ -160,6 +159,7 @@ const Management: React.FC = () => {
               <div className="row">
                 <div className="col-md-12 col-sm-12 mt-2">
                   <input
+                    required
                     type="text"
                     className="form-control"
                     placeholder="Serie title"
@@ -175,6 +175,7 @@ const Management: React.FC = () => {
               <div className="row mb-6">
                 <div className="col-md-12 col-sm-12 mt-2">
                   <input
+                    required
                     type="text"
                     className="form-control"
                     placeholder="Serie description"

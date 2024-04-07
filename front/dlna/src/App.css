@@ -15,3 +15,21 @@
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
+.colorized {
+  background: linear-gradient(
+    to right,
+    #e87a7a,
+    #fdff95,
+    #caff9c,
+    #26c6da,
+    #2196f3,
+    #2d2ae1,
+    #a641ff,
+    #ffebcb,
+    #8a2a94
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

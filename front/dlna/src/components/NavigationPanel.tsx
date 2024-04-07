@@ -3,18 +3,25 @@ import { Navbar, Nav, Container } from "react-bootstrap";
 import gopher from "../assets/gopher.png";
 import { NavLink } from "react-router-dom";
 import ModeSwitch from "./ModeSwitch";
+import "../App.css";
 
 const NavigationPanel: React.FC = () => {
   return (
-    <Navbar bg="transparent" expand="lg" className="">
+    <Navbar bg="transparent" expand="lg" className="colorized">
       <Container>
-        <Navbar.Brand style={{ fontSize: "40px", fontWeight: "bold" }}>
-          <img src={gopher} style={{ height: "60px" }} /> go cinema
+        <Navbar.Brand style={{ fontSize: "30px", fontWeight: "bold" }}>
+          <img src={gopher} style={{ height: "100px" }} />
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <Nav.Item style={{ marginRight: "8px", marginTop: "8px" }}>
+            <Nav.Item
+              style={{
+                marginRight: "26px",
+                marginTop: "16px",
+                fontSize: "50px",
+              }}
+            >
               <NavLink
                 to="/"
                 style={{ textDecoration: "none", color: "#89CFF0" }}
@@ -22,7 +29,13 @@ const NavigationPanel: React.FC = () => {
                 Home
               </NavLink>
             </Nav.Item>
-            <Nav.Item style={{ marginRight: "8px", marginTop: "8px" }}>
+            <Nav.Item
+              style={{
+                marginRight: "26px",
+                marginTop: "16px",
+                fontSize: "50px",
+              }}
+            >
               <NavLink
                 to="/movies"
                 style={{ textDecoration: "none", color: "#89CFF0" }}
@@ -30,7 +43,13 @@ const NavigationPanel: React.FC = () => {
                 Movies
               </NavLink>
             </Nav.Item>
-            <Nav.Item style={{ marginRight: "8px", marginTop: "8px" }}>
+            <Nav.Item
+              style={{
+                marginRight: "26px",
+                marginTop: "16px",
+                fontSize: "50px",
+              }}
+            >
               <NavLink
                 to="/series"
                 style={{ textDecoration: "none", color: "#89CFF0" }}
@@ -39,7 +58,13 @@ const NavigationPanel: React.FC = () => {
               </NavLink>
             </Nav.Item>
 
-            <Nav.Item style={{ marginRight: "8px", marginTop: "8px" }}>
+            <Nav.Item
+              style={{
+                marginRight: "26px",
+                marginTop: "16px",
+                fontSize: "50px",
+              }}
+            >
               <NavLink
                 to="/management"
                 style={{ textDecoration: "none", color: "#89CFF0" }}
@@ -48,7 +73,13 @@ const NavigationPanel: React.FC = () => {
               </NavLink>
             </Nav.Item>
           </Nav>
-          <Nav.Item style={{ marginRight: "8px", marginTop: "10px" }}>
+          <Nav.Item
+            style={{
+              marginRight: "16px",
+              marginLeft: "16px",
+              marginTop: "26px",
+            }}
+          >
             <ModeSwitch
               onChange={() => {
                 if (

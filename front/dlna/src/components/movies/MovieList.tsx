@@ -22,7 +22,7 @@ const MovieList: React.FC = () => {
 
   const onMovieSubmit: SubmitHandler<MovieInputs> = (data) => {
     axios
-      .put(`http://localhost:8080/movies/${updatingMovie?.ID}`, data)
+      .put(`http://192.168.3.9:8080/movies/${updatingMovie?.ID}`, data)
       .then((response) => {
         console.log(response);
       })
@@ -51,7 +51,7 @@ const MovieList: React.FC = () => {
   };
 
   const handleOpenEditModal = async (id: string) => {
-    const response = await axios.get(`http://localhost:8080/movies/${id}`);
+    const response = await axios.get(`http://192.168.3.9:8080/movies/${id}`);
     setUpdatingMovie(response.data);
     setEditModal(true);
 
@@ -70,14 +70,14 @@ const MovieList: React.FC = () => {
   };
 
   const handleFetchMovies = () => {
-    axios.get("http://localhost:8080/movies").then((response) => {
+    axios.get("http://192.168.3.9:8080/movies").then((response) => {
       setMovies(response.data);
     });
   };
 
   const handleDelete = (id: string) => {
     axios
-      .delete(`http://localhost:8080/movies/${id}`)
+      .delete(`http://192.168.3.9:8080/movies/${id}`)
       .then((response) => {
         console.log(response);
         handleFetchMovies();

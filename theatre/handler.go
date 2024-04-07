@@ -241,3 +241,157 @@ func HandleDownloadFile(c *gin.Context) {
 	defer file.Close()
 	c.FileAttachment(filePath, fileName)
 }
+
+func CreateSerie(c *gin.Context) {
+	var serie Series
+	db := c.MustGet("db").(*gorm.DB)
+	if err := c.ShouldBindJSON(&serie); err != nil {
+		fmt.Printf("Error binding json: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	serie.CurrentIndex = 0
+
+	result := db.Create(&serie)
+	if result.Error != nil {
+		c.String(http.StatusInternalServerError, "Error creating serie record: %s", result.Error.Error())
+		return
+	}
+}
+
+func ListSeries(c *gin.Context) {
+	db := c.MustGet("db").(*gorm.DB)
+	var series []Series
+	db.Find(&series)
+	c.JSON(http.StatusOK, series)
+}
+
+func GetSerie(c *gin.Context) {
+	db := c.MustGet("db").(*gorm.DB)
+	id := c.Param("id")
+
+	var serie Series
+	if err := db.First(&serie, id).Error; err != nil {
+		c.String(http.StatusNotFound, "Serie not found: %s", err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, serie)
+}
+
+func DeleteSerie(c *gin.Context) {
+	db := c.MustGet("db").(*gorm.DB)
+	id := c.Param("id")
+
+	var serie Series
+	if err := db.First(&serie, id).Error; err != nil {
+		c.String(http.StatusNotFound, "Serie not found: %s", err.Error())
+		return
+	}
+
+	result := db.Delete(&serie)
+	if result.Error != nil {
+		c.String(http.StatusInternalServerError, "Error deleting serie record: %s", result.Error.Error())
+		return
+	}
+}
+
+func EditSerie(c *gin.Context) {
+	db := c.MustGet("db").(*gorm.DB)
+	id := c.Param("id")
+
+	var serie Series
+	if err := db.First(&serie, id).Error; err != nil {
+		c.String(http.StatusNotFound, "Serie not found: %s", err.Error())
+		return
+	}
+
+	var serieReq SeriesRequest
+
+	if err := c.ShouldBindJSON(&serieReq); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	if serieReq.Title != "" {
+		serie.Title = serieReq.Title
+	}
+
+	if serieReq.Description != "" {
+		serie.Description = serieReq.Description
+	}
+
+	result := db.Save(&serie)
+	if result.Error != nil {
+		c.String(http.StatusInternalServerError, "Error updating serie record: %s", result.Error.Error())
+		return
+	}
+}
+
+func AppendEpisodeToSeries(c *gin.Context) {
+	db := c.MustGet("db").(*gorm.DB)
+	id := c.Param("id")
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 5<<30) // 5GB
+	file, header, err := c.Request.FormFile("File")
+
+	var serie Series
+	if err := db.Preload("Episodes").First(&serie, id).Error; err != nil {
+		c.String(http.StatusNotFound, "Serie not found: %s", err.Error())
+		return
+	}
+
+	if err != nil {
+		c.String(http.StatusBadRequest, "Error retrieving file: %s", err.Error())
+		return
+	}
+
+	savePath := "/Users/klajdi/Downloads/go_cinema"
+
+	destinationFile, err := os.Create(savePath + "/" + header.Filename)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Error creating file: %s", err.Error())
+		return
+	}
+
+	defer destinationFile.Close()
+
+	if _, err := io.Copy(destinationFile, file); err != nil {
+		c.String(http.StatusInternalServerError, "Error saving file: %s", err.Error())
+		return
+	}
+
+	currentIndex := 0
+	if serie.Episodes != nil {
+		currentIndex = len(serie.Episodes)
+	}
+
+	episode := Episode{
+		Path:         savePath + "/" + header.Filename,
+		ResumeAt:     "00:00",
+		EpisodeIndex: currentIndex + 1,
+		SeriesID:     serie.ID,
+	}
+
+	result := db.Create(&episode)
+	if result.Error != nil {
+		c.String(http.StatusInternalServerError, "Error creating episode record: %s", result.Error.Error())
+		return
+	}
+
+	c.JSON(http.StatusCreated, episode)
+}
+
+func GetSerieEpisodes(c *gin.Context) {
+	db := c.MustGet("db").(*gorm.DB)
+	id := c.Param("id")
+
+	var serie Series
+	if err := db.First(&serie, id).Error; err != nil {
+		c.String(http.StatusNotFound, "Serie not found: %s", err.Error())
+		return
+	}
+
+	var episodes []Episode
+	db.Model(&serie).Association("Episodes").Find(&episodes)
+	c.JSON(http.StatusOK, episodes)
+}
