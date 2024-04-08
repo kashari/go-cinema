@@ -79,8 +79,8 @@ const MoviePlayer: React.FC<VideoPlayerProps> = ({
     <div>
       <video
         ref={videoRef}
-        width="880"
-        height="560"
+        width="95%"
+        height="95%"
         controls
         preload="metadata"
       >
