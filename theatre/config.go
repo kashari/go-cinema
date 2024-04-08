@@ -62,5 +62,9 @@ func SetupRoutes(db *gorm.DB) *gin.Engine {
 	r.POST("series/:id/append", AppendEpisodeToSeries)
 	r.GET("series/:id/episodes", GetSerieEpisodes)
 
+	r.POST(("/episodes/:id/last-access"), HandleLastAccessForEpisode)
+	r.POST("/series/:id/current", HandleSetSeriesIndex)
+	r.GET("/series/:id/current", HandleGetLastEpisodeIndex)
+
 	return r
 }

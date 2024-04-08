@@ -3,6 +3,7 @@ import "../App.css";
 
 import { useForm, SubmitHandler } from "react-hook-form";
 import axios, { AxiosProgressEvent } from "axios";
+import { useNavigate } from "react-router-dom";
 
 type MovieInputs = {
   Title: string;
@@ -23,6 +24,8 @@ const Management: React.FC = () => {
     formState: { errors },
   } = useForm<MovieInputs>();
 
+  const navigate = useNavigate();
+
   const {
     register: serieRegister,
     handleSubmit: serieSubmit,
@@ -41,7 +44,7 @@ const Management: React.FC = () => {
     // @ts-ignore
     formData.append("File", data.File[0]);
     axios
-      .post("http://localhost:8080/movies", formData, {
+      .post("http://192.168.3.150:8080/movies", formData, {
         method: "POST",
         headers: { "Content-Type": "multipart/form-data" },
         onUploadProgress: (progressEvent: AxiosProgressEvent) => {
@@ -56,6 +59,7 @@ const Management: React.FC = () => {
         console.debug(response.data);
         setTimeout(() => {
           setMovieUploadProgress(0);
+          navigate("/movies");
         }, 900);
       })
       .catch((error) => {
@@ -64,20 +68,26 @@ const Management: React.FC = () => {
   };
 
   const onSerieSubmit: SubmitHandler<SerieInputs> = (data) => {
-    axios.post("http://localhost:8080/series", data).then((response) => {
+    axios.post("http://192.168.3.150:8080/series", data).then((response) => {
       serieReset();
       console.debug(response.data);
+      navigate("/series");
     });
   };
 
   return (
-    <div className="container mt-4 mb-4">
-      <h1 className="multicolor">Management options</h1>
-      <h6>Here you can add movies and/or series</h6>
+    <div className="container w-75 mt-4 mb-4">
+      <h1
+        className="multicolor"
+        style={{ marginTop: "55px", fontSize: "75px" }}
+      >
+        Management
+      </h1>
+      <h2>Here you can add movies and/or series</h2>
       <div className="row p-4 border shadow-sm">
         <div className="row gx-1">
           <div className="col-md-6 col-sm-12 p-4">
-            Add a new Movie
+            <h1>Add new movie</h1>
             <form onSubmit={handleSubmit(onMovieSubmit)}>
               <div className="row gy-3 mt-2">
                 <div className="col-md-6 col-sm-12 mt-2">
@@ -154,7 +164,7 @@ const Management: React.FC = () => {
             </form>
           </div>
           <div className="col-md-6 col-sm-12 p-4">
-            Add a new serie
+            <h1>Add new serie</h1>
             <form onSubmit={serieSubmit(onSerieSubmit)}>
               <div className="row">
                 <div className="col-md-12 col-sm-12 mt-2">

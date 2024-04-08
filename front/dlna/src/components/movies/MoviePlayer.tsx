@@ -27,7 +27,9 @@ const MoviePlayer: React.FC<VideoPlayerProps> = ({
 
       console.debug("updating video data...", fileName, fileMinute);
       axios
-        .post(`http://localhost:8080/last-access/${movieId}?time=${fileMinute}`)
+        .post(
+          `http://192.168.3.150:8080/last-access/${movieId}?time=${fileMinute}`
+        )
         .then(() => {
           console.debug("video data updated...");
         });

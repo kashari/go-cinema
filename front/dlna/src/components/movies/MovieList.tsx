@@ -22,7 +22,7 @@ const MovieList: React.FC = () => {
 
   const onMovieSubmit: SubmitHandler<MovieInputs> = (data) => {
     axios
-      .put(`http://192.168.3.9:8080/movies/${updatingMovie?.ID}`, data)
+      .put(`http://192.168.3.150:8080/movies/${updatingMovie?.ID}`, data)
       .then((response) => {
         console.log(response);
       })
@@ -51,7 +51,7 @@ const MovieList: React.FC = () => {
   };
 
   const handleOpenEditModal = async (id: string) => {
-    const response = await axios.get(`http://192.168.3.9:8080/movies/${id}`);
+    const response = await axios.get(`http://192.168.3.150:8080/movies/${id}`);
     setUpdatingMovie(response.data);
     setEditModal(true);
 
@@ -70,14 +70,14 @@ const MovieList: React.FC = () => {
   };
 
   const handleFetchMovies = () => {
-    axios.get("http://192.168.3.9:8080/movies").then((response) => {
+    axios.get("http://192.168.3.150:8080/movies").then((response) => {
       setMovies(response.data);
     });
   };
 
   const handleDelete = (id: string) => {
     axios
-      .delete(`http://192.168.3.9:8080/movies/${id}`)
+      .delete(`http://192.168.3.150:8080/movies/${id}`)
       .then((response) => {
         console.log(response);
         handleFetchMovies();
@@ -98,9 +98,9 @@ const MovieList: React.FC = () => {
     <div className="container mt-4 mb-4">
       <div className="row">
         {movies.map((movie) => (
-          <div className="col-md-3 gy-4 col-sm-12" key={movie.ID}>
+          <div className="col-md-6 gy-4 col-sm-12" key={movie.ID}>
             <div className="card mb-6">
-              <h6 className="text-center mt-4">{movie.Title}</h6>
+              <h1 className="text-center mt-5">{movie.Title}</h1>
               <br />
               <img
                 onClick={() => {
@@ -108,14 +108,16 @@ const MovieList: React.FC = () => {
                 }}
                 className="card-img-top mt-6"
                 style={{ cursor: "pointer" }}
-                height={50}
-                width={50}
+                height={100}
+                width={100}
                 src={play}
                 alt="Card image cap"
               />
+              <p className="p-2 text-center">{movie.Description}</p>
+
               <div className="card-body d-flex justify-content-around">
                 <a
-                  href={`http://localhost:8080/video/download?file=${movie.Path}`}
+                  href={`http://192.168.3.150:8080/video/download?file=${movie.Path}`}
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -179,7 +181,7 @@ const MovieList: React.FC = () => {
         <MoviePlayer
           leftAt={movieLeftAt}
           movieId={movieId}
-          videoEndpoint={"http://localhost:8080/video"}
+          videoEndpoint={"http://192.168.3.150:8080/video"}
           fileName={currentFilePlaying}
           onClose={closeMoviePlayer}
         />

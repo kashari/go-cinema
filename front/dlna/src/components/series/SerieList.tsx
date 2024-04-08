@@ -22,7 +22,7 @@ const SerieList: React.FC = () => {
 
   const onSerieSubmit: SubmitHandler<SerieInputs> = (data) => {
     axios
-      .put(`http://192.168.3.9:8080/movies/${updatingSerie?.ID}`, data)
+      .put(`http://192.168.3.150:8080/movies/${updatingSerie?.ID}`, data)
       .then((response) => {
         console.debug(response);
       })
@@ -36,7 +36,7 @@ const SerieList: React.FC = () => {
   const [editModal, setEditModal] = useState<boolean>(false);
 
   const handleOpenEditModal = async (id: string) => {
-    const response = await axios.get(`http://192.168.3.9:8080/series/${id}`);
+    const response = await axios.get(`http://192.168.3.150:8080/series/${id}`);
     setUpdatingSerie(response.data);
     setEditModal(true);
 
@@ -55,14 +55,14 @@ const SerieList: React.FC = () => {
   };
 
   const handleFetchSeries = () => {
-    axios.get("http://192.168.3.9:8080/series").then((response) => {
+    axios.get("http://192.168.3.150:8080/series").then((response) => {
       setSeries(response.data);
     });
   };
 
   const handleDelete = (id: string) => {
     axios
-      .delete(`http://192.168.3.9:8080/series/${id}`)
+      .delete(`http://192.168.3.150:8080/series/${id}`)
       .then((response) => {
         console.debug(response);
         handleFetchSeries();
@@ -83,13 +83,19 @@ const SerieList: React.FC = () => {
     <div className="container mt-4 mb-4">
       <div className="row">
         {series.map((serie) => (
-          <div className="col-md-3 gy-4 col-sm-12" key={serie.ID}>
+          <div className="col-md-6 gy-4 col-sm-12" key={serie.ID}>
             <div className="card mb-6">
               <Link
                 to={`/series/${serie.ID}/episodes`}
-                style={{ textDecoration: "none", color: "#89CFF0" }}
+                state={{ currentIndex: serie.CurrentIndex }}
+                style={{
+                  textDecoration: "none",
+                  color: "#89CFF0",
+                }}
               >
-                <h6 className="text-center mt-4">{serie.Title}</h6>
+                <h6 className="text-center mt-5" style={{ fontSize: "45px" }}>
+                  {serie.Title}
+                </h6>
               </Link>
               <br />
               <small className="text-muted p-4 text-center">

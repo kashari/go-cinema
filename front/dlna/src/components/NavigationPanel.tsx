@@ -7,9 +7,11 @@ import "../App.css";
 
 const NavigationPanel: React.FC = () => {
   return (
-    <Navbar bg="transparent" expand="lg" className="colorized">
+    <Navbar bg="transparent" expand="lg">
       <Container>
-        <Navbar.Brand style={{ fontSize: "30px", fontWeight: "bold" }}>
+        <Navbar.Brand
+          style={{ fontSize: "30px", fontWeight: "bold", marginRight: "185px" }}
+        >
           <img src={gopher} style={{ height: "100px" }} />
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
@@ -22,10 +24,7 @@ const NavigationPanel: React.FC = () => {
                 fontSize: "50px",
               }}
             >
-              <NavLink
-                to="/"
-                style={{ textDecoration: "none", color: "#89CFF0" }}
-              >
+              <NavLink to="/" style={{ textDecoration: "none" }}>
                 Home
               </NavLink>
             </Nav.Item>
@@ -52,6 +51,7 @@ const NavigationPanel: React.FC = () => {
             >
               <NavLink
                 to="/series"
+                className={"colorized"}
                 style={{ textDecoration: "none", color: "#89CFF0" }}
               >
                 Series
@@ -67,6 +67,7 @@ const NavigationPanel: React.FC = () => {
             >
               <NavLink
                 to="/management"
+                className={"silver"}
                 style={{ textDecoration: "none", color: "#89CFF0" }}
               >
                 Management

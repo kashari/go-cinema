@@ -3,21 +3,21 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 
 interface VideoPlayerProps {
   leftAt: string;
-  movieId: string;
+  episodeId: string;
   videoEndpoint: string;
-  fileName: string;
   onClose: () => void;
+  onEnded?: () => void;
 }
 
 const SeriePlayer: React.FC<VideoPlayerProps> = ({
   leftAt,
-  movieId,
+  episodeId,
   videoEndpoint,
-  fileName,
   onClose,
+  onEnded,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [playingIndex, setPlayingIndex] = useState<number>(0);
+  const [fullScreenButton, setFullScreenButton] = useState<boolean>(false);
 
   const handleLastVideoOpenData = useCallback(
     (videoTime: number) => {
@@ -26,14 +26,16 @@ const SeriePlayer: React.FC<VideoPlayerProps> = ({
         "0"
       )}:${String(Math.floor(videoTime % 60)).padStart(2, "0")}`;
 
-      console.debug("updating video data...", fileName, fileMinute);
+      console.debug("updating video data...", fileMinute);
       axios
-        .post(`http://localhost:8080/last-access/${movieId}?time=${fileMinute}`)
+        .post(
+          `http://192.168.3.150:8080/episodes/${episodeId}/last-access?time=${fileMinute}`
+        )
         .then(() => {
           console.debug("video data updated...");
         });
     },
-    [fileName, movieId]
+    [episodeId]
   );
 
   const handleSkipToWhereYouLeft = useCallback(() => {
@@ -48,19 +50,22 @@ const SeriePlayer: React.FC<VideoPlayerProps> = ({
     const videoElement = videoRef.current;
 
     if (!videoElement) return;
+    setFullScreenButton(true);
 
     setTimeout(() => {
       handleSkipToWhereYouLeft();
-      videoElement.requestFullscreen();
+      const fsButton = document.getElementById("fs-button");
+      fsButton?.setAttribute("aria-pressed", "true");
+      setFullScreenButton(false);
       videoElement.play();
-    }, 4000);
+    }, 2000);
 
     const timeShifter = setInterval(() => {
       handleLastVideoOpenData(videoElement.currentTime);
     }, 60000);
     videoElement.addEventListener("ended", () => {
-      setPlayingIndex((playingIndex) => playingIndex + 1);
-      // get the next index file name
+      handleLastVideoOpenData(videoElement.currentTime);
+      onEnded && onEnded();
     });
 
     return () => {
@@ -69,14 +74,17 @@ const SeriePlayer: React.FC<VideoPlayerProps> = ({
       setTimeout(() => {
         onClose();
       }, 1000);
+      videoElement.removeEventListener("ended", () => {
+        handleLastVideoOpenData(videoElement.currentTime);
+        onEnded && onEnded();
+      });
     };
   }, [
     videoEndpoint,
-    fileName,
-    playingIndex,
     handleLastVideoOpenData,
     onClose,
     handleSkipToWhereYouLeft,
+    onEnded,
   ]);
 
   return (
@@ -88,9 +96,22 @@ const SeriePlayer: React.FC<VideoPlayerProps> = ({
         controls
         preload="metadata"
       >
-        <source src={`${videoEndpoint}?file=${fileName}`} type="video/mp4" />
+        <source src={`${videoEndpoint}`} type="video/mp4" />
         Your browser does not support the video tag.
       </video>
+      {fullScreenButton && (
+        <button
+          style={{ display: "none" }}
+          id="fs-button"
+          onClick={(e) => {
+            e.preventDefault();
+            const videoElement = document.querySelector("video");
+            videoElement?.requestFullscreen();
+          }}
+        >
+          fs
+        </button>
+      )}
     </div>
   );
 };

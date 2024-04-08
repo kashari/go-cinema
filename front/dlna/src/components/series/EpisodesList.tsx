@@ -5,6 +5,8 @@ import { useParams } from "react-router-dom";
 import play from "../../assets/play.svg";
 import Modal from "../Modal";
 import { SubmitHandler, useForm } from "react-hook-form";
+import "../../App.css";
+import SeriePlayer from "./SeriePlayer";
 
 type EpisodeInputs = {
   File: File;
@@ -18,8 +20,13 @@ const EpisodesList: React.FC = () => {
   } = useForm<EpisodeInputs>();
 
   const [episodes, setEpisodes] = useState<Episode[]>([]);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [editModal, setEditModal] = useState<boolean>(false);
   const [episodeUploadProgress, setEpisodeUploadProgress] = useState<number>(0);
+  const [videoModal, setVideoModal] = useState<boolean>(false);
+  const [videoEndpoint, setVideoEndpoint] = useState<string>("");
+  const [currentEpisodePlaying, setCurrentEpisodePlaying] =
+    useState<Episode | null>(null);
 
   const { id } = useParams();
 
@@ -30,7 +37,7 @@ const EpisodesList: React.FC = () => {
     formData.append("File", data.File[0]);
 
     axios
-      .post(`http://localhost:8080/series/${id}/append`, formData, {
+      .post(`http://192.168.3.150:8080/series/${id}/append`, formData, {
         method: "POST",
         headers: { "Content-Type": "multipart/form-data" },
         onUploadProgress: (progressEvent: AxiosProgressEvent) => {
@@ -51,9 +58,51 @@ const EpisodesList: React.FC = () => {
       });
   };
 
+  const handleGetCurrentEpisodeIndex = useCallback(async () => {
+    axios
+      .get(`http://192.168.3.150:8080/series/${id}/current`)
+      .then((response) => {
+        console.debug(response);
+        setCurrentIndex(response.data.index);
+      });
+  }, [id]);
+
+  const handleSetCurrentEpisodeIndex = async (index: number) => {
+    axios
+      .post(`http://192.168.3.150:8080/series/${id}/current?index=${index}`)
+      .then((response) => {
+        console.debug(response);
+      });
+  };
+
+  const handleOpenVideoModal = (index: number) => {
+    setVideoEndpoint(
+      `http://192.168.3.150:8080/video?file=${episodes[index - 1].Path}`
+    );
+    handleSetCurrentEpisodeIndex(index);
+    setCurrentEpisodePlaying(episodes[index - 1]);
+    setVideoModal(true);
+  };
+
+  const switchToNextEpisode = () => {
+    document.exitFullscreen();
+    setCurrentIndex(currentIndex + 1);
+    handleCloseVideoModal();
+    setTimeout(() => {
+      handleOpenVideoModal(currentIndex);
+    }, 3000);
+    handleSetCurrentEpisodeIndex(currentIndex);
+  };
+
+  const handleCloseVideoModal = () => {
+    handleGetCurrentEpisodeIndex();
+    handleFetchEpisodes();
+    setVideoModal(false);
+  };
+
   const handleFetchEpisodes = useCallback(() => {
     axios
-      .get(`http://192.168.3.9:8080/series/${id}/episodes`)
+      .get(`http://192.168.3.150:8080/series/${id}/episodes`)
       .then((response) => {
         setEpisodes(response.data);
       });
@@ -66,10 +115,14 @@ const EpisodesList: React.FC = () => {
 
   useEffect(() => {
     handleFetchEpisodes();
-  }, [handleFetchEpisodes]);
+    handleGetCurrentEpisodeIndex();
+  }, [handleFetchEpisodes, handleGetCurrentEpisodeIndex]);
   return (
     <div className="container mt-6 mb-6">
-      <div className="row mt-6 mb-6 p-6 border">
+      <div
+        className="row mt-6 mb-6 p-6 border"
+        onClick={() => handleOpenVideoModal(currentIndex)}
+      >
         <img
           src={play}
           alt="play"
@@ -102,11 +155,29 @@ const EpisodesList: React.FC = () => {
       </div>
       <div className="row">
         {episodes.map((episode) => (
-          <div className="col-md-3 gy-4 col-sm-12" key={episode.ID}>
-            <div className="card mb-6">
+          <div className="col-md-6 gy-4 col-sm-12" key={episode.ID}>
+            <div
+              className={`card mb-6 text-center ${
+                currentIndex === episode.EpisodeIndex ? "yellow-border" : ""
+              }`}
+            >
               <h3 className="text-center" style={{ marginTop: "25px" }}>
                 {episode.EpisodeIndex}
               </h3>
+              <div
+                className="row"
+                style={{ marginTop: "15px" }}
+                onClick={() => handleOpenVideoModal(episode.EpisodeIndex)}
+              >
+                <img
+                  src={play}
+                  alt="play"
+                  height={85}
+                  width={85}
+                  title="Resume where you left at."
+                  style={{ cursor: "pointer" }}
+                />
+              </div>
               <br />
               <small className="text-muted p-4 text-center">
                 {episode.ResumeAt}
@@ -168,6 +239,16 @@ const EpisodesList: React.FC = () => {
             </div>
           </form>
         </div>
+      </Modal>
+
+      <Modal isOpen={videoModal} onClose={handleCloseVideoModal}>
+        <SeriePlayer
+          videoEndpoint={videoEndpoint}
+          leftAt={currentEpisodePlaying?.ResumeAt ?? "00:00"}
+          episodeId={currentEpisodePlaying?.ID.toString() ?? ""}
+          onClose={handleCloseVideoModal}
+          onEnded={switchToNextEpisode}
+        />
       </Modal>
     </div>
   );

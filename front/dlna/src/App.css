@@ -33,3 +33,22 @@
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
+.silver {
+  background: linear-gradient(
+    to right,
+    #b1b1b1,
+    #6e6e6e,
+    #cacca4,
+    #77a0a0,
+    #ffebcb,
+    #8a2a94
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.yellow-border {
+  border: 2px solid #f9a825;
+}

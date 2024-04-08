@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	usageData = "/Users/klajdi/Desktop/usage_data.io"
+	usageData = "/application/logs/usage_data.io"
 )
 
 func CreateMovie(c *gin.Context) {
@@ -26,7 +26,7 @@ func CreateMovie(c *gin.Context) {
 		c.String(http.StatusBadRequest, "Error retrieving file: %s", err.Error())
 		return
 	}
-	savePath := "/Users/klajdi/Downloads/go_cinema"
+	savePath := "/Media/go_cinema/Movies"
 
 	destinationFile, err := os.Create(savePath + "/" + header.Filename)
 	if err != nil {
@@ -191,6 +191,9 @@ func HandleLastAccessForMovie(c *gin.Context) {
 	}
 
 	jsonMovie, _ := json.Marshal(movie)
+	// remove the last } from the json object
+	jsonMovie = jsonMovie[:len(jsonMovie)-1]
+	jsonMovie = append(jsonMovie, []byte(`,"Type":"Movie"}`)...)
 	UpdateUsageData(jsonMovie)
 }
 
@@ -200,14 +203,14 @@ func GetUsageData(c *gin.Context) {
 		fmt.Println("Something went wrong reading the data: ", err)
 	}
 
-	var movie Movie
+	var item map[string]interface{}
 	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&movie)
+	err = decoder.Decode(&item)
 	if err != nil {
 		fmt.Println("Something went wrong decoding the data: ", err)
 	}
 
-	c.JSON(http.StatusOK, movie)
+	c.JSON(http.StatusOK, item)
 }
 
 func GetFile(fileName string) (*os.File, error) {
@@ -251,6 +254,17 @@ func CreateSerie(c *gin.Context) {
 		return
 	}
 
+	basedir := "/Media/go_cinema/Series/"
+
+	err := os.MkdirAll(basedir+serie.Title, os.ModePerm)
+	if err != nil {
+		fmt.Printf("Error creating directory: %s", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	serie.BaseDir = basedir + serie.Title
+
 	serie.CurrentIndex = 0
 
 	result := db.Create(&serie)
@@ -286,6 +300,12 @@ func DeleteSerie(c *gin.Context) {
 	var serie Series
 	if err := db.First(&serie, id).Error; err != nil {
 		c.String(http.StatusNotFound, "Serie not found: %s", err.Error())
+		return
+	}
+
+	err := os.RemoveAll(serie.BaseDir)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Error deleting directory: %s", err.Error())
 		return
 	}
 
@@ -345,9 +365,7 @@ func AppendEpisodeToSeries(c *gin.Context) {
 		return
 	}
 
-	savePath := "/Users/klajdi/Downloads/go_cinema"
-
-	destinationFile, err := os.Create(savePath + "/" + header.Filename)
+	destinationFile, err := os.Create(serie.BaseDir + "/" + header.Filename)
 	if err != nil {
 		c.String(http.StatusInternalServerError, "Error creating file: %s", err.Error())
 		return
@@ -366,7 +384,7 @@ func AppendEpisodeToSeries(c *gin.Context) {
 	}
 
 	episode := Episode{
-		Path:         savePath + "/" + header.Filename,
+		Path:         serie.BaseDir + "/" + header.Filename,
 		ResumeAt:     "00:00",
 		EpisodeIndex: currentIndex + 1,
 		SeriesID:     serie.ID,
@@ -394,4 +412,73 @@ func GetSerieEpisodes(c *gin.Context) {
 	var episodes []Episode
 	db.Model(&serie).Association("Episodes").Find(&episodes)
 	c.JSON(http.StatusOK, episodes)
+}
+
+func HandleLastAccessForEpisode(c *gin.Context) {
+	db := c.MustGet("db").(*gorm.DB)
+	id := c.Param("id")
+
+	var episode Episode
+	if err := db.First(&episode, id).Error; err != nil {
+		c.String(http.StatusNotFound, "Episode not found: %s", err.Error())
+		return
+	}
+
+	episode.ResumeAt = c.Query("time")
+	result := db.Save(&episode)
+	if result.Error != nil {
+		c.String(http.StatusInternalServerError, "Error updating episode record: %s", result.Error.Error())
+		return
+	}
+
+	var serie Series
+	if err := db.First(&serie, episode.SeriesID).Error; err != nil {
+		c.String(http.StatusNotFound, "Serie not found: %s", err.Error())
+		return
+	}
+
+	serie.Episodes = []Episode{episode}
+
+	jsonSerie, _ := json.Marshal(serie)
+	// append a type to the json object to differentiate between movie and serie
+	jsonSerie = jsonSerie[:len(jsonSerie)-1]
+	jsonSerie = append(jsonSerie, []byte(`,"Type":"Serie"}`)...)
+	UpdateUsageData(jsonSerie)
+}
+
+func HandleSetSeriesIndex(c *gin.Context) {
+	db := c.MustGet("db").(*gorm.DB)
+	id := c.Param("id")
+	indexStr := c.Query("index")
+	index, err := strconv.ParseUint(indexStr, 10, 64)
+	if err != nil {
+		c.String(http.StatusBadRequest, "Invalid index value: %s", err.Error())
+		return
+	}
+
+	var serie Series
+	if err := db.First(&serie, id).Error; err != nil {
+		c.String(http.StatusNotFound, "Serie not found: %s", err.Error())
+		return
+	}
+
+	serie.CurrentIndex = uint(index)
+	result := db.Save(&serie)
+	if result.Error != nil {
+		c.String(http.StatusInternalServerError, "Error updating serie record: %s", result.Error.Error())
+		return
+	}
+}
+
+func HandleGetLastEpisodeIndex(c *gin.Context) {
+	db := c.MustGet("db").(*gorm.DB)
+	id := c.Param("id")
+
+	var serie Series
+	if err := db.First(&serie, id).Error; err != nil {
+		c.String(http.StatusNotFound, "Serie not found: %s", err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"index": serie.CurrentIndex})
 }
