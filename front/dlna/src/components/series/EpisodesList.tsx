@@ -78,7 +78,7 @@ const EpisodesList: React.FC = () => {
 
   const handleOpenVideoModal = (index: number) => {
     setVideoEndpoint(
-      `http://192.168.3.150:8080/video?file=${episodes[index - 1].Path}`
+      `http://192.168.3.150:8080/video?file=${episodes[index-1].Path}`
     );
     handleSetCurrentEpisodeIndex(index);
     setCurrentEpisodePlaying(episodes[index - 1]);
@@ -86,15 +86,23 @@ const EpisodesList: React.FC = () => {
   };
 
   const switchToNextEpisode = async () => {
-    document.exitFullscreen();
+    if (document.fullscreenEnabled())
+        document.exitFullscreen()
     handleCloseVideoModal();
-    await handleSetCurrentEpisodeIndex(currentIndex + 1);
-    await handleGetCurrentEpisodeIndex();
-
-    setTimeout(() => {
-      handleOpenVideoModal(currentIndex);
-    }, 3000);
+  
+    const nextIndex = currentIndex + 1;
+  
+    if (nextIndex < episodes.length) {
+      await handleSetCurrentEpisodeIndex(nextIndex);
+  
+      setTimeout(() => {
+        handleOpenVideoModal(nextIndex);
+      }, 3000);
+    } else {
+      console.log("No more episodes available");
+    }
   };
+  
 
   const handleCloseVideoModal = () => {
     handleGetCurrentEpisodeIndex();
