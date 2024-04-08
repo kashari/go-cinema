@@ -96,7 +96,7 @@ const MovieList: React.FC = () => {
   }, [setValue, updatingMovie]);
   return (
     <div className="container mt-4 mb-4">
-      <div className="row">
+      <div className="row mt-5 mb-5">
         {movies.map((movie) => (
           <div className="col-md-6 gy-4 col-sm-12" key={movie.ID}>
             <div className="card mb-6">

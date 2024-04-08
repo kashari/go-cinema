@@ -85,14 +85,15 @@ const EpisodesList: React.FC = () => {
     setVideoModal(true);
   };
 
-  const switchToNextEpisode = () => {
+  const switchToNextEpisode = async () => {
     document.exitFullscreen();
-    setCurrentIndex(currentIndex + 1);
     handleCloseVideoModal();
+    await handleSetCurrentEpisodeIndex(currentIndex + 1);
+    await handleGetCurrentEpisodeIndex();
+
     setTimeout(() => {
       handleOpenVideoModal(currentIndex);
     }, 3000);
-    handleSetCurrentEpisodeIndex(currentIndex);
   };
 
   const handleCloseVideoModal = () => {
@@ -119,7 +120,7 @@ const EpisodesList: React.FC = () => {
     handleGetCurrentEpisodeIndex();
   }, [handleFetchEpisodes, handleGetCurrentEpisodeIndex]);
   return (
-    <div className="container mt-6 mb-6">
+    <div className="container mt-5 mb-5">
       <div
         className="row mt-6 mb-6 p-6 border"
         onClick={() => handleOpenVideoModal(currentIndex)}
@@ -154,7 +155,7 @@ const EpisodesList: React.FC = () => {
           </svg>
         </span>
       </div>
-      <div className="row">
+      <div className="row mt-5 mb-5">
         {episodes.map((episode) => (
           <div className="col-md-6 gy-4 col-sm-12" key={episode.ID}>
             <div
