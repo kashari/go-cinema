@@ -51,6 +51,7 @@ const EpisodesList: React.FC = () => {
         console.debug(response);
         setTimeout(() => {
           setEpisodeUploadProgress(0);
+          handleCloseEditModal();
         }, 900);
       })
       .catch((error) => {
