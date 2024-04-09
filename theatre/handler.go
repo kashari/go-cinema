@@ -411,6 +411,21 @@ func GetSerieEpisodes(c *gin.Context) {
 
 	var episodes []Episode
 	db.Model(&serie).Association("Episodes").Find(&episodes)
+
+	// if there are no episodes, return an empty array
+	if len(episodes) == 0 {
+		c.JSON(http.StatusOK, episodes)
+		return
+	}
+
+	for i := 0; i < len(episodes); i++ {
+		for j := i + 1; j < len(episodes); j++ {
+			if episodes[i].EpisodeIndex > episodes[j].EpisodeIndex {
+				episodes[i], episodes[j] = episodes[j], episodes[i]
+			}
+		}
+	}
+
 	c.JSON(http.StatusOK, episodes)
 }
 
