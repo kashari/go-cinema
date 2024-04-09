@@ -412,19 +412,7 @@ func GetSerieEpisodes(c *gin.Context) {
 	var episodes []Episode
 	db.Model(&serie).Association("Episodes").Find(&episodes)
 
-	// if there are no episodes, return an empty array
-	if len(episodes) == 0 {
-		c.JSON(http.StatusOK, episodes)
-		return
-	}
-
-	for i := 0; i < len(episodes); i++ {
-		for j := i + 1; j < len(episodes); j++ {
-			if episodes[i].EpisodeIndex > episodes[j].EpisodeIndex {
-				episodes[i], episodes[j] = episodes[j], episodes[i]
-			}
-		}
-	}
+	MergeSortEpisodesByIndex(&episodes)
 
 	c.JSON(http.StatusOK, episodes)
 }
@@ -496,4 +484,48 @@ func HandleGetLastEpisodeIndex(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"index": serie.CurrentIndex})
+}
+
+func MergeSortEpisodesByIndex(episodes *[]Episode) {
+	if len(*episodes) <= 1 {
+		return
+	}
+
+	mid := len(*episodes) / 2
+	left := (*episodes)[:mid]
+	right := (*episodes)[mid:]
+
+	MergeSortEpisodesByIndex(&left)
+	MergeSortEpisodesByIndex(&right)
+
+	*episodes = MergeEpisodes(left, right)
+}
+
+func MergeEpisodes(left, right []Episode) []Episode {
+	size, i, j := len(left)+len(right), 0, 0
+	merged := make([]Episode, size)
+
+	for k := 0; k < size; k++ {
+		if i > len(left)-1 && j <= len(right)-1 {
+			merged[k] = right[j]
+			j++
+			continue
+		}
+
+		if j > len(right)-1 && i <= len(left)-1 {
+			merged[k] = left[i]
+			i++
+			continue
+		}
+
+		if left[i].EpisodeIndex < right[j].EpisodeIndex {
+			merged[k] = left[i]
+			i++
+		} else {
+			merged[k] = right[j]
+			j++
+		}
+	}
+
+	return merged
 }
