@@ -262,6 +262,7 @@ const EpisodesList: React.FC = () => {
         isOpen={videoModal}
         episodeId={currentEpisodePlaying?.ID.toString() ?? ""}
         url={videoEndpoint}
+        onClose={handleCloseVideoModal}
         leftAt={
           startOver ? "00:00" : currentEpisodePlaying?.ResumeAt ?? "00:00"
         }

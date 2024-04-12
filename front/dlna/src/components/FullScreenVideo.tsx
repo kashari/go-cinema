@@ -27,8 +27,8 @@ const ControlsContainer = styled.div<{ showControls: boolean }>`
   left: 50%;
   transform: translate(-50%, -50%);
   display: flex;
-  justify-content: center;
-  align-items: center;
+  width: 70%;
+  justify-content: space-between;
   opacity: ${({ showControls }) => (showControls ? 1 : 0)};
   transition: opacity 0.3s ease;
 `;
@@ -88,7 +88,21 @@ const TimeInfo = styled.div<{ showControls: boolean }>`
 
 const ControlButton = styled.button`
   color: white;
-  font-size: 140px;
+  font-size: 100px;
+  border: none;
+  background-color: transparent;
+  margin: 0 20px;
+  cursor: pointer;
+  transition: color 0.3s;
+
+  &:hover {
+    color: rgba(255, 255, 255, 0.7);
+  }
+`;
+
+const PauseButton = styled.button`
+  color: white;
+  font-size: 170px;
   border: none;
   background-color: transparent;
   margin: 0 20px;
@@ -105,6 +119,7 @@ type FullScreenVideoProps = {
   isOpen: boolean;
   episodeId: string;
   leftAt: string;
+  onClose: () => void;
   onEnded?: () => void;
 };
 
@@ -113,6 +128,7 @@ const FullScreenVideo: React.FC<FullScreenVideoProps> = ({
   isOpen,
   episodeId,
   leftAt,
+  onClose,
   onEnded,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -234,12 +250,15 @@ const FullScreenVideo: React.FC<FullScreenVideoProps> = ({
       }
       clearInterval(timeShifter);
       handleLastVideoOpenData(videoElement.currentTime);
+      setTimeout(() => {
+        onClose();
+      }, 1000);
       videoElement.removeEventListener("ended", () => {
         handleLastVideoOpenData(videoElement.currentTime);
         onEnded && onEnded();
       });
     };
-  }, [handleLastVideoOpenData, handleSkipToWhereYouLeft, onEnded]);
+  }, [handleLastVideoOpenData, handleSkipToWhereYouLeft, onClose, onEnded]);
 
   const progress = (currentTime / duration) * 100;
 
@@ -267,13 +286,13 @@ const FullScreenVideo: React.FC<FullScreenVideoProps> = ({
                 style={{ transform: "rotate(-45deg)" }}
               ></i>
             </ControlButton>
-            <ControlButton onClick={handlePlayPause}>
+            <PauseButton onClick={handlePlayPause}>
               {isPlaying ? (
                 <i className="fas fa-pause"></i>
               ) : (
                 <i className="fas fa-play"></i>
               )}
-            </ControlButton>
+            </PauseButton>
             <ControlButton onClick={() => handleSeek(15)}>
               <i
                 className="fas fa-rotate-right"
