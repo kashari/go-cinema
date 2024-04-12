@@ -22,7 +22,7 @@ const SerieList: React.FC = () => {
 
   const onSerieSubmit: SubmitHandler<SerieInputs> = (data) => {
     axios
-      .put(`http://192.168.3.150:8080/movies/${updatingSerie?.ID}`, data)
+      .put(`http://192.168.3.150:8080/series/${updatingSerie?.ID}`, data)
       .then((response) => {
         console.debug(response);
       })
