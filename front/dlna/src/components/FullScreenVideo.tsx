@@ -3,6 +3,16 @@ import styled from "styled-components";
 import "@fortawesome/fontawesome-free/css/all.css";
 import axios from "axios";
 
+const LeftIcon = styled.i<{ rotated: boolean }>`
+  ${({ rotated }) => rotated && "transform: rotate(-85deg);"}
+  transition: transform 0.3s ease;
+`;
+
+const RightIcon = styled.i<{ rotated: boolean }>`
+  ${({ rotated }) => rotated && "transform: rotate(85deg);"}
+  transition: transform 0.3s ease;
+`;
+
 const VideoContainer = styled.div`
   position: fixed;
   top: 0;
@@ -138,6 +148,29 @@ const FullScreenVideo: React.FC<FullScreenVideoProps> = ({
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const [isRotateLeftClicked, setIsRotateLeftClicked] =
+    useState<boolean>(false);
+  const [isRotateRightClicked, setIsRotateRightClicked] =
+    useState<boolean>(false);
+
+  const handleRotateLeftClick = () => {
+    setIsRotateLeftClicked(!isRotateLeftClicked);
+    setIsRotateRightClicked(false);
+    setTimeout(() => {
+      setIsRotateLeftClicked(false);
+    }, 300);
+    handleSeek(-15);
+  };
+
+  const handleRotateRightClick = () => {
+    setIsRotateRightClicked(!isRotateRightClicked);
+    setIsRotateLeftClicked(false);
+    setTimeout(() => {
+      setIsRotateRightClicked(false);
+    }, 300);
+    handleSeek(15);
+  };
 
   const handlePlayPause = () => {
     const videoElement = videoRef.current;
@@ -280,11 +313,11 @@ const FullScreenVideo: React.FC<FullScreenVideoProps> = ({
             onDoubleClick={handleDoubleClick}
           />
           <ControlsContainer showControls={showControls}>
-            <ControlButton onClick={() => handleSeek(-15)}>
-              <i
+            <ControlButton onClick={handleRotateLeftClick}>
+              <LeftIcon
                 className="fas fa-rotate-left"
-                style={{ transform: "rotate(-45deg)" }}
-              ></i>
+                rotated={isRotateLeftClicked}
+              />
             </ControlButton>
             <PauseButton onClick={handlePlayPause}>
               {isPlaying ? (
@@ -293,11 +326,11 @@ const FullScreenVideo: React.FC<FullScreenVideoProps> = ({
                 <i className="fas fa-play"></i>
               )}
             </PauseButton>
-            <ControlButton onClick={() => handleSeek(15)}>
-              <i
+            <ControlButton onClick={handleRotateRightClick}>
+              <RightIcon
                 className="fas fa-rotate-right"
-                style={{ transform: "rotate(45deg)" }}
-              ></i>
+                rotated={isRotateRightClicked}
+              />
             </ControlButton>
           </ControlsContainer>
           <TimeInfo showControls={showControls}>
