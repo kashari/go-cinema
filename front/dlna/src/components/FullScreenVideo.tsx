@@ -257,10 +257,10 @@ const FullScreenVideo: React.FC<FullScreenVideoProps> = ({
     if (!videoElement) return;
 
     setTimeout(() => {
-      setIsPlaying(true);
       handleSkipToWhereYouLeft();
       videoElement.play();
-    }, 2000);
+      setIsPlaying(true);
+    }, 4000);
 
     const timeShifter = setInterval(() => {
       handleLastVideoOpenData(videoElement.currentTime);
@@ -311,6 +311,7 @@ const FullScreenVideo: React.FC<FullScreenVideoProps> = ({
             onEnded={onEnded}
             onTimeUpdate={handleTimeUpdate}
             onDoubleClick={handleDoubleClick}
+            preload="metadata"
           />
           <ControlsContainer showControls={showControls}>
             <ControlButton onClick={handleRotateLeftClick}>
