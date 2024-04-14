@@ -106,6 +106,7 @@ const App: React.FC = () => {
               <Link
                 to={`/series/${lastAccessSerie.ID}/episodes`}
                 style={{ textDecoration: "none" }}
+                state={{ title: lastAccessSerie.Title }}
               >
                 Continue Watching
               </Link>
