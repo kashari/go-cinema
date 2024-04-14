@@ -140,11 +140,8 @@ const TopOptionButton = styled.button`
 
 const HeadLine = styled.h2`
   color: white;
-  font-size: 45px;
-  border: none;
+  font-size: 40px;
   background-color: transparent;
-  font-weight: 200;
-  cursor: pointer;
   transition: color 0.3s;
 
   &:hover {
