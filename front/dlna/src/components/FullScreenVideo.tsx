@@ -58,6 +58,20 @@ const ProgressBarContainer = styled.div<{ showControls: boolean }>`
   transition: opacity 0.3s ease;
 `;
 
+const TopOptionsContainer = styled.div<{ showControls: boolean }>`
+  width: 80%;
+  height: 20px;
+  position: absolute;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: space-between;
+  padding: 0 10px;
+  opacity: ${({ showControls }) => (showControls ? 1 : 0)};
+  transition: opacity 0.3s ease;
+`;
+
 const ProgressBar = styled.div<{ progress: number }>`
   width: 100%;
   height: 4px;
@@ -110,6 +124,34 @@ const ControlButton = styled.button`
   }
 `;
 
+const TopOptionButton = styled.button`
+  color: white;
+  font-size: 40px;
+  border: none;
+  background-color: transparent;
+  margin: 0 20px;
+  cursor: pointer;
+  transition: color 0.3s;
+
+  &:hover {
+    color: rgba(255, 255, 255, 0.7);
+  }
+`;
+
+const HeadLine = styled.h2`
+  color: white;
+  font-size: 45px;
+  border: none;
+  background-color: transparent;
+  font-weight: 200;
+  cursor: pointer;
+  transition: color 0.3s;
+
+  &:hover {
+    color: rgba(255, 255, 255, 0.7);
+  }
+`;
+
 const PauseButton = styled.button`
   color: white;
   font-size: 170px;
@@ -129,6 +171,8 @@ type FullScreenVideoProps = {
   isOpen: boolean;
   episodeId: string;
   leftAt: string;
+  title: string;
+  episode: string;
   onClose: () => void;
   onEnded?: () => void;
 };
@@ -138,6 +182,8 @@ const FullScreenVideo: React.FC<FullScreenVideoProps> = ({
   isOpen,
   episodeId,
   leftAt,
+  title,
+  episode,
   onClose,
   onEnded,
 }) => {
@@ -313,6 +359,17 @@ const FullScreenVideo: React.FC<FullScreenVideoProps> = ({
             onDoubleClick={handleDoubleClick}
             preload="metadata"
           />
+
+          <TopOptionsContainer showControls={showControls}>
+            <TopOptionButton onClick={onClose}>
+              <i className="fas fa-arrow-left"></i>
+            </TopOptionButton>
+            <HeadLine>
+              {title} Episode {episode}
+            </HeadLine>
+            <span></span>
+          </TopOptionsContainer>
+
           <ControlsContainer showControls={showControls}>
             <ControlButton onClick={handleRotateLeftClick}>
               <LeftIcon

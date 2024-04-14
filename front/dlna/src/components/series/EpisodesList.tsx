@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Episode } from "../../types/series";
 import axios, { AxiosProgressEvent } from "axios";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import play from "../../assets/play.svg";
 import Modal from "../Modal";
 import { SubmitHandler, useForm } from "react-hook-form";
@@ -30,6 +30,7 @@ const EpisodesList: React.FC = () => {
     useState<Episode | null>(null);
 
   const { id } = useParams();
+  const { state } = useLocation();
 
   const onSerieSubmit: SubmitHandler<EpisodeInputs> = (data) => {
     const formData = new FormData();
@@ -263,6 +264,8 @@ const EpisodesList: React.FC = () => {
         episodeId={currentEpisodePlaying?.ID.toString() ?? ""}
         url={videoEndpoint}
         onClose={handleCloseVideoModal}
+        title={state.title}
+        episode={currentIndex.toString()}
         leftAt={
           startOver ? "00:00" : currentEpisodePlaying?.ResumeAt ?? "00:00"
         }

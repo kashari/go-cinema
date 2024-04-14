@@ -87,7 +87,7 @@ const SerieList: React.FC = () => {
             <div className="card mb-6">
               <Link
                 to={`/series/${serie.ID}/episodes`}
-                state={{ currentIndex: serie.CurrentIndex }}
+                state={{ currentIndex: serie.CurrentIndex, title: serie.Title }}
                 style={{
                   textDecoration: "none",
                   color: "#89CFF0",
