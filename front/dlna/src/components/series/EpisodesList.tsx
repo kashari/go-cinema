@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Episode } from "../../types/series";
-import axios, { AxiosProgressEvent } from "axios";
+import { AxiosProgressEvent } from "axios";
+import axios from "../../utils/axios";
 import { useLocation, useParams } from "react-router-dom";
 import play from "../../assets/play.svg";
 import Modal from "../Modal";
@@ -39,7 +40,7 @@ const EpisodesList: React.FC = () => {
     formData.append("File", data.File[0]);
 
     axios
-      .post(`http://192.168.3.150:8080/series/${id}/append`, formData, {
+      .post(`/series/${id}/append`, formData, {
         method: "POST",
         headers: { "Content-Type": "multipart/form-data" },
         onUploadProgress: (progressEvent: AxiosProgressEvent) => {
@@ -63,7 +64,7 @@ const EpisodesList: React.FC = () => {
 
   const handleGetCurrentEpisodeIndex = useCallback(async () => {
     axios
-      .get(`http://192.168.3.150:8080/series/${id}/current`)
+      .get(`/series/${id}/current`)
       .then((response) => {
         console.debug(response);
         setCurrentIndex(response.data.index);
@@ -72,7 +73,7 @@ const EpisodesList: React.FC = () => {
 
   const handleSetCurrentEpisodeIndex = async (index: number) => {
     axios
-      .post(`http://192.168.3.150:8080/series/${id}/current?index=${index}`)
+      .post(`/series/${id}/current?index=${index}`)
       .then((response) => {
         console.debug(response);
       });
@@ -112,7 +113,7 @@ const EpisodesList: React.FC = () => {
 
   const handleFetchEpisodes = useCallback(() => {
     axios
-      .get(`http://192.168.3.150:8080/series/${id}/episodes`)
+      .get(`/series/${id}/episodes`)
       .then((response) => {
         setEpisodes(response.data);
       });

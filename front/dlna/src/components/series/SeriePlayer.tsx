@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "../../utils/axios";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
 interface VideoPlayerProps {
@@ -29,7 +29,7 @@ const SeriePlayer: React.FC<VideoPlayerProps> = ({
       console.debug("updating video data...", fileMinute);
       axios
         .post(
-          `http://192.168.3.150:8080/episodes/${episodeId}/last-access?time=${fileMinute}`
+          `/episodes/${episodeId}/last-access?time=${fileMinute}`
         )
         .then(() => {
           console.debug("video data updated...");

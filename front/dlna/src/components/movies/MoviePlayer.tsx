@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "../../utils/axios";
 import React, { useCallback, useEffect, useRef } from "react";
 
 interface VideoPlayerProps {
@@ -28,7 +28,7 @@ const MoviePlayer: React.FC<VideoPlayerProps> = ({
       console.debug("updating video data...", fileName, fileMinute);
       axios
         .post(
-          `http://192.168.3.150:8080/last-access/${movieId}?time=${fileMinute}`
+          `/last-access/${movieId}?time=${fileMinute}`
         )
         .then(() => {
           console.debug("video data updated...");
@@ -83,7 +83,7 @@ const MoviePlayer: React.FC<VideoPlayerProps> = ({
         height="95%"
         controls
         preload="metadata"
-      >
+        >
         <source src={`${videoEndpoint}?file=${fileName}`} type="video/mp4" />
         Your browser does not support the video tag.
       </video>

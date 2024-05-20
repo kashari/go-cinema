@@ -1,7 +1,11 @@
 package theatre
 
 import (
+	"go-cinema/extras"
+	"go-cinema/handler"
 	"log"
+	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
@@ -33,6 +37,33 @@ func CORSMiddleware() gin.HandlerFunc {
 	}
 }
 
+func AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		token := c.Request.Header.Get("Authorization")
+
+		if token == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token not provided"})
+			c.Abort()
+			return
+		}
+
+		if strings.Contains(token, "Bearer ") {
+			token = strings.Split(token, "Bearer ")[1]
+		}
+
+		claims, err := extras.VerifyToken(token)
+		if err != nil {
+			log.Println(err)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.Abort()
+			return
+		}
+
+		c.Set("user_id", claims["user_id"])
+		c.Next()
+	}
+}
+
 func SetupRoutes(db *gorm.DB) *gin.Engine {
 	r := gin.Default()
 	r.Use(CORSMiddleware())
@@ -43,28 +74,36 @@ func SetupRoutes(db *gorm.DB) *gin.Engine {
 		c.Next()
 	})
 
-	r.POST("/movies", CreateMovie)
-	r.PUT("/movies/:id", EditMovie)
-	r.GET("/movies", GetMovies)
-	r.GET("/movies/:id", GetMovie)
-	r.DELETE("/movies/:id", DeleteMovie)
-
+	r.POST("/login", handler.Login)
+	r.POST("/refresh-token", handler.RefreshToken)
+	r.POST("/register", handler.CreateUser)
 	r.GET("/video", VideoServerHandler)
-	r.GET("/video/download", HandleDownloadFile)
-	r.POST("/last-access/:id", HandleLastAccessForMovie)
-	r.GET("left-at", GetUsageData)
 
-	r.GET("/series", ListSeries)
-	r.POST("/series", CreateSerie)
-	r.GET("/series/:id", GetSerie)
-	r.PUT("/series/:id", EditSerie)
-	r.DELETE("/series/:id", DeleteSerie)
-	r.POST("series/:id/append", AppendEpisodeToSeries)
-	r.GET("series/:id/episodes", GetSerieEpisodes)
+	auth := r.Group("/")
+	auth.Use(AuthMiddleware())
+	{
+		auth.POST("/movies", CreateMovie)
+		auth.PUT("/movies/:id", EditMovie)
+		auth.GET("/movies", GetMovies)
+		auth.GET("/movies/:id", GetMovie)
+		auth.DELETE("/movies/:id", DeleteMovie)
 
-	r.POST(("/episodes/:id/last-access"), HandleLastAccessForEpisode)
-	r.POST("/series/:id/current", HandleSetSeriesIndex)
-	r.GET("/series/:id/current", HandleGetLastEpisodeIndex)
+		auth.GET("/video/download", HandleDownloadFile)
+		auth.POST("/last-access/:id", HandleLastAccessForMovie)
+		auth.GET("/left-at", GetUsageData)
+
+		auth.GET("/series", ListSeries)
+		auth.POST("/series", CreateSerie)
+		auth.GET("/series/:id", GetSerie)
+		auth.PUT("/series/:id", EditSerie)
+		auth.DELETE("/series/:id", DeleteSerie)
+		auth.POST("/series/:id/append", AppendEpisodeToSeries)
+		auth.GET("/series/:id/episodes", GetSerieEpisodes)
+
+		auth.POST("/episodes/:id/last-access", HandleLastAccessForEpisode)
+		auth.POST("/series/:id/current", HandleSetSeriesIndex)
+		auth.GET("/series/:id/current", HandleGetLastEpisodeIndex)
+	}
 
 	return r
 }

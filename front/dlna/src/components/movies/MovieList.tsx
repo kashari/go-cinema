@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Movie } from "../../types/movie";
-import axios from "axios";
+import axios from "../../utils/axios";
 import play from "../../assets/play.svg";
 import Modal from "../Modal";
 import MoviePlayer from "./MoviePlayer";
@@ -22,7 +22,7 @@ const MovieList: React.FC = () => {
 
   const onMovieSubmit: SubmitHandler<MovieInputs> = (data) => {
     axios
-      .put(`http://192.168.3.150:8080/movies/${updatingMovie?.ID}`, data)
+      .put(`/movies/${updatingMovie?.ID}`, data)
       .then((response) => {
         console.log(response);
       })
@@ -51,7 +51,7 @@ const MovieList: React.FC = () => {
   };
 
   const handleOpenEditModal = async (id: string) => {
-    const response = await axios.get(`http://192.168.3.150:8080/movies/${id}`);
+    const response = await axios.get(`/movies/${id}`);
     setUpdatingMovie(response.data);
     setEditModal(true);
 
@@ -70,14 +70,14 @@ const MovieList: React.FC = () => {
   };
 
   const handleFetchMovies = () => {
-    axios.get("http://192.168.3.150:8080/movies").then((response) => {
+    axios.get("/movies").then((response) => {
       setMovies(response.data);
     });
   };
 
   const handleDelete = (id: string) => {
     axios
-      .delete(`http://192.168.3.150:8080/movies/${id}`)
+      .delete(`/movies/${id}`)
       .then((response) => {
         console.log(response);
         handleFetchMovies();
@@ -117,7 +117,7 @@ const MovieList: React.FC = () => {
 
               <div className="card-body d-flex justify-content-around">
                 <a
-                  href={`http://192.168.3.150:8080/video/download?file=${movie.Path}`}
+                  href={`/video/download?file=${movie.Path}`}
                   target="_blank"
                   rel="noreferrer"
                 >

@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import "../App.css";
 
 import { useForm, SubmitHandler } from "react-hook-form";
-import axios, { AxiosProgressEvent } from "axios";
+import { AxiosProgressEvent } from "axios";
+import axios from "../utils/axios";
 import { useNavigate } from "react-router-dom";
 
 type MovieInputs = {
@@ -44,7 +45,7 @@ const Management: React.FC = () => {
     // @ts-ignore
     formData.append("File", data.File[0]);
     axios
-      .post("http://192.168.3.150:8080/movies", formData, {
+      .post("/movies", formData, {
         method: "POST",
         headers: { "Content-Type": "multipart/form-data" },
         onUploadProgress: (progressEvent: AxiosProgressEvent) => {
@@ -68,7 +69,7 @@ const Management: React.FC = () => {
   };
 
   const onSerieSubmit: SubmitHandler<SerieInputs> = (data) => {
-    axios.post("http://192.168.3.150:8080/series", data).then((response) => {
+    axios.post("/series", data).then((response) => {
       serieReset();
       console.debug(response.data);
       navigate("/series");

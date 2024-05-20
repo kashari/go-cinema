@@ -14,7 +14,7 @@ import (
 
 var (
 	downloadProgress = syncmap.Map{}
-	usageData = "/application/logs/usage_data.io"
+	usageData        = "/application/logs/usage_data.io"
 )
 
 type FileHandler struct {
@@ -26,7 +26,6 @@ type FileRow struct {
 	Name string
 	Size string
 }
-
 
 func MergeSortByNames(files []FileRow) []FileRow {
 	if len(files) <= 1 {
@@ -60,8 +59,6 @@ func MergeNames(left, right []FileRow) []FileRow {
 	return result
 }
 
-
-
 func (f *FileHandler) ListFiles() []FileRow {
 	log.Println("Listing files in directory", f.Root)
 	dir, err := os.Open(f.Root)
@@ -86,7 +83,7 @@ func (f *FileHandler) ListFiles() []FileRow {
 			fileNames = append(fileNames, FileRow{Name: file.Name(), Size: sizeString})
 		}
 	}
-	
+
 	return MergeSortByNames(fileNames)
 }
 

@@ -51,7 +51,7 @@ const NavigationPanel: React.FC = () => {
             >
               <NavLink
                 to="/series"
-                className={"colorized"}
+                className={"silver"}
                 style={{ textDecoration: "none", color: "#89CFF0" }}
               >
                 Series

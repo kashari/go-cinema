@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import styled from "styled-components";
 import "@fortawesome/fontawesome-free/css/all.css";
-import axios from "axios";
+import axios from "../utils/axios";
 
 const LeftIcon = styled.i<{ rotated: boolean }>`
   ${({ rotated }) => rotated && "transform: rotate(-85deg);"}
@@ -237,7 +237,7 @@ const FullScreenVideo: React.FC<FullScreenVideoProps> = ({
       console.debug("updating video data...", fileMinute);
       axios
         .post(
-          `http://192.168.3.150:8080/episodes/${episodeId}/last-access?time=${fileMinute}`
+          `/episodes/${episodeId}/last-access?time=${fileMinute}`
         )
         .then(() => {
           console.debug("video data updated...");
