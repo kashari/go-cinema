@@ -127,40 +127,45 @@ func GetMovie(c *gin.Context) {
 }
 
 func VideoServerHandler(c *gin.Context) {
-	fileName := c.Query("file")
-	log.Println("Serving video file", fileName)
-	file, err := ServeVideo(fileName)
-	if err != nil {
-		c.String(http.StatusInternalServerError, "Error opening file: %s", err.Error())
-		return
-	}
-	defer file.Close()
+    fileName := c.Query("file")
+    log.Println("Serving video file", fileName)
 
-	fileSize := GetFileSize(file)
-	handleRangeRequests(c.Writer, c.Request, file, fileSize)
-}
+    file, err := ServeVideo(fileName)
+    if err != nil {
+        c.String(http.StatusInternalServerError, "Error opening file: %s", err.Error())
+        return
+    }
+    defer file.Close()
 
-func handleRangeRequests(w http.ResponseWriter, r *http.Request, file *os.File, fileSize int64) {
-	rangeHeader := r.Header.Get("Range")
+    fileInfo, err := file.Stat()
+    if err != nil {
+        log.Println("Error getting file info:", err)
+        c.String(http.StatusInternalServerError, "Error reading file info")
+        return
+    }
 
-	if rangeHeader == "" {
-		w.Header().Set("Content-Length", strconv.FormatInt(fileSize, 10))
-		fileInfo, err := file.Stat()
-		if err != nil {
-			log.Println("Error getting file info", err)
-			return
-		}
-		http.ServeContent(w, r, file.Name(), fileInfo.ModTime(), file)
-		return
-	}
+    c.Header("Content-Type", "video/mp4")
+    c.Header("Content-Length", strconv.FormatInt(fileInfo.Size(), 10))
 
-	fileInfo, err := file.Stat()
-	if err != nil {
-		log.Println("Error getting file info", err)
-		return
-	}
-
-	http.ServeContent(w, r, file.Name(), fileInfo.ModTime(), file)
+    // Stream in chunks using a goroutine
+    go func() {
+        const chunkSize = 32 * 1024 // 32KB chunks
+        for {
+            n, err := io.CopyN(c.Writer, file, chunkSize)
+            if n > 0 {
+                if f, ok := c.Writer.(http.Flusher); ok {
+                    f.Flush()
+                }
+            }
+            if err == io.EOF {
+                break
+            }
+            if err != nil {
+                log.Println("Error during streaming:", err)
+                break
+            }
+        }
+    }()
 }
 
 func UpdateUsageData(data []byte) {
