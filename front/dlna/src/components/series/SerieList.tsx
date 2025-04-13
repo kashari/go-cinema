@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Movie } from "../../types/movie";
-import axios from "axios";
+import axios from "../../utils/axios";
 import Modal from "../Modal";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { Series } from "../../types/series";

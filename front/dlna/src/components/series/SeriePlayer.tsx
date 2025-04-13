@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "../../utils/axios";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
 interface VideoPlayerProps {

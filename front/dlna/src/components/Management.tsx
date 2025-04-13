@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import "../App.css";
 
 import { useForm, SubmitHandler } from "react-hook-form";
-import axios, { AxiosProgressEvent } from "axios";
+import { AxiosProgressEvent } from "axios";
+import axios from "../utils/axios";
 import { useNavigate } from "react-router-dom";
 
 type MovieInputs = {

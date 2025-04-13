@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import styled from "styled-components";
 import "@fortawesome/fontawesome-free/css/all.css";
-import axios from "axios";
+import axios from "../utils/axios";
 
 const LeftIcon = styled.i<{ rotated: boolean }>`
   ${({ rotated }) => rotated && "transform: rotate(-85deg);"}

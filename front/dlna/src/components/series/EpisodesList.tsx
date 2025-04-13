@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Episode } from "../../types/series";
-import axios, { AxiosProgressEvent } from "axios";
+import { AxiosProgressEvent } from "axios";
+import axios from "../../utils/axios";
 import { useLocation, useParams } from "react-router-dom";
 import play from "../../assets/play.svg";
 import Modal from "../Modal";

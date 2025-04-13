@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import "./App.css";
 import { Button } from "react-bootstrap";
-import axios from "axios";
+import axios from "./utils/axios";
 import Modal from "./components/Modal";
 import MoviePlayer from "./components/movies/MoviePlayer";
 import { Link } from "react-router-dom";

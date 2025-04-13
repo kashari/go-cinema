@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Movie } from "../../types/movie";
-import axios from "axios";
+import axios from "../../utils/axios";
 import play from "../../assets/play.svg";
 import Modal from "../Modal";
 import MoviePlayer from "./MoviePlayer";

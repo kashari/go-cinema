@@ -1,7 +1,11 @@
 package theatre
 
 import (
+	"go-cinema/extras"
+	"go-cinema/handler"
 	"log"
+	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
@@ -29,6 +33,33 @@ func CORSMiddleware() gin.HandlerFunc {
 			return
 		}
 
+		c.Next()
+	}
+}
+
+func AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		token := c.Request.Header.Get("Authorization")
+
+		if token == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token not provided"})
+			c.Abort()
+			return
+		}
+
+		if strings.Contains(token, "Bearer ") {
+			token = strings.Split(token, "Bearer ")[1]
+		}
+
+		claims, err := extras.VerifyToken(token)
+		if err != nil {
+			log.Println(err)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.Abort()
+			return
+		}
+
+		c.Set("user_id", claims["user_id"])
 		c.Next()
 	}
 }

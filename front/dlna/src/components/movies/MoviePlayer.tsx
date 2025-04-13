@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "../../utils/axios";
 import React, { useCallback, useEffect, useRef } from "react";
 
 interface VideoPlayerProps {
@@ -83,7 +83,7 @@ const MoviePlayer: React.FC<VideoPlayerProps> = ({
         height="95%"
         controls
         preload="metadata"
-      >
+        >
         <source src={`${videoEndpoint}?file=${fileName}`} type="video/mp4" />
         Your browser does not support the video tag.
       </video>

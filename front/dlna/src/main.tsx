@@ -8,6 +8,9 @@ import Management from "./components/Management";
 import SerieList from "./components/series/SerieList";
 import MovieList from "./components/movies/MovieList";
 import EpisodesList from "./components/series/EpisodesList";
+import PrivateRoute from "./components/PrivateRoute";
+import Login from "./components/Login";
+import Signup from "./components/Signup";
 
 export const RootLayout: React.FC = () => {
   return (
@@ -20,20 +23,28 @@ export const RootLayout: React.FC = () => {
 
 const router = createBrowserRouter([
   {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/signup",
+    element: <Signup />,
+  },
+  {
     path: "/",
-    element: <RootLayout />,
+    element: <PrivateRoute><RootLayout /></PrivateRoute>,
     children: [
-      { path: "", element: <App /> },
-      { path: "series", element: <SerieList /> },
-      { path: "movies", element: <MovieList /> },
-      { path: "management", element: <Management /> },
-      { path: "series/:id/episodes", element: <EpisodesList /> },
+      { path: "", element: <PrivateRoute><App /></PrivateRoute>},
+      { path: "series", element: <PrivateRoute><SerieList /></PrivateRoute>},
+      { path: "movies", element: <PrivateRoute><MovieList /></PrivateRoute>},
+      { path: "management", element: <PrivateRoute><Management /></PrivateRoute>},
+      { path: "series/:id/episodes", element: <PrivateRoute><EpisodesList /></PrivateRoute>},
     ],
   },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  //<React.StrictMode>
+  <React.StrictMode>
   <RouterProvider router={router} />
-  //</React.StrictMode>
+  </React.StrictMode>
 );
