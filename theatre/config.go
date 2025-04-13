@@ -2,7 +2,6 @@ package theatre
 
 import (
 	"go-cinema/extras"
-	"go-cinema/handler"
 	"log"
 	"net/http"
 	"strings"
