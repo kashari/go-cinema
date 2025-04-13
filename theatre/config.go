@@ -9,7 +9,7 @@ import (
 )
 
 func InitDB() (db *gorm.DB, err error) {
-	dsn := "host=192.168.3.150 user=misen password=root dbname=theatre port=5432 sslmode=disable TimeZone=Europe/Tirane"
+	dsn := "host=192.168.3.200 user=misen password=root dbname=theatre port=5432 sslmode=disable TimeZone=Europe/Tirane"
 	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
@@ -44,6 +44,7 @@ func SetupRoutes(db *gorm.DB) *gin.Engine {
 	})
 
 	r.POST("/movies", CreateMovie)
+	r.POST("/movie_special", CreateMovieSpecial)
 	r.PUT("/movies/:id", EditMovie)
 	r.GET("/movies", GetMovies)
 	r.GET("/movies/:id", GetMovie)
@@ -60,6 +61,7 @@ func SetupRoutes(db *gorm.DB) *gin.Engine {
 	r.PUT("/series/:id", EditSerie)
 	r.DELETE("/series/:id", DeleteSerie)
 	r.POST("series/:id/append", AppendEpisodeToSeries)
+	r.POST("series/:id/special", AppendEpisodeToSeriesSpecial)
 	r.GET("series/:id/episodes", GetSerieEpisodes)
 
 	r.POST(("/episodes/:id/last-access"), HandleLastAccessForEpisode)

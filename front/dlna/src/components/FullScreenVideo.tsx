@@ -237,7 +237,7 @@ const FullScreenVideo: React.FC<FullScreenVideoProps> = ({
       console.debug("updating video data...", fileMinute);
       axios
         .post(
-          `http://192.168.3.150:8080/episodes/${episodeId}/last-access?time=${fileMinute}`
+          `http://192.168.3.200:9090/episodes/${episodeId}/last-access?time=${fileMinute}`
         )
         .then(() => {
           console.debug("video data updated...");
@@ -354,8 +354,9 @@ const FullScreenVideo: React.FC<FullScreenVideoProps> = ({
             onEnded={onEnded}
             onTimeUpdate={handleTimeUpdate}
             onDoubleClick={handleDoubleClick}
-            preload="metadata"
+            preload="auto" // Adjusted preload to 'auto' for faster loading
           />
+
 
           <TopOptionsContainer showControls={showControls}>
             <TopOptionButton onClick={onClose}>

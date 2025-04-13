@@ -47,7 +47,7 @@ const App: React.FC = () => {
   };
 
   const handleLastVideoOpenData = useCallback(async () => {
-    axios.get("http://192.168.3.150:8080/left-at").then((response) => {
+    axios.get("http://192.168.3.200:9090/left-at").then((response) => {
       const item = response.data;
       if (item.Type === "Movie") {
         setLastAccessMovie(item);
@@ -120,7 +120,7 @@ const App: React.FC = () => {
             <MoviePlayer
               leftAt={lastAccessMovie.ResumeAt || "00:00"}
               movieId={lastAccessMovie?.ID || ""}
-              videoEndpoint={"http://192.168.3.150:8080/video"}
+              videoEndpoint={"http://192.168.3.200:9090/video"}
               fileName={lastAccessMovie.Path || ""}
               onClose={closeMoviePlayer}
             />

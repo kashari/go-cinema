@@ -22,7 +22,7 @@ const MovieList: React.FC = () => {
 
   const onMovieSubmit: SubmitHandler<MovieInputs> = (data) => {
     axios
-      .put(`http://192.168.3.150:8080/movies/${updatingMovie?.ID}`, data)
+      .put(`http://192.168.3.200:9090/movies/${updatingMovie?.ID}`, data)
       .then((response) => {
         console.log(response);
       })
@@ -51,7 +51,7 @@ const MovieList: React.FC = () => {
   };
 
   const handleOpenEditModal = async (id: string) => {
-    const response = await axios.get(`http://192.168.3.150:8080/movies/${id}`);
+    const response = await axios.get(`http://192.168.3.200:9090/movies/${id}`);
     setUpdatingMovie(response.data);
     setEditModal(true);
 
@@ -70,14 +70,14 @@ const MovieList: React.FC = () => {
   };
 
   const handleFetchMovies = () => {
-    axios.get("http://192.168.3.150:8080/movies").then((response) => {
+    axios.get("http://192.168.3.200:9090/movies").then((response) => {
       setMovies(response.data);
     });
   };
 
   const handleDelete = (id: string) => {
     axios
-      .delete(`http://192.168.3.150:8080/movies/${id}`)
+      .delete(`http://192.168.3.200:9090/movies/${id}`)
       .then((response) => {
         console.log(response);
         handleFetchMovies();
@@ -117,7 +117,7 @@ const MovieList: React.FC = () => {
 
               <div className="card-body d-flex justify-content-around">
                 <a
-                  href={`http://192.168.3.150:8080/video/download?file=${movie.Path}`}
+                  href={`http://192.168.3.200:9090/video/download?file=${movie.Path}`}
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -181,7 +181,7 @@ const MovieList: React.FC = () => {
         <MoviePlayer
           leftAt={movieLeftAt}
           movieId={movieId}
-          videoEndpoint={"http://192.168.3.150:8080/video"}
+          videoEndpoint={"http://192.168.3.200:9090/video"}
           fileName={currentFilePlaying}
           onClose={closeMoviePlayer}
         />

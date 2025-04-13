@@ -18,7 +18,7 @@ func main() {
 
 	router := theatre.SetupRoutes(db)
 
-	err = router.Run(":8080")
+	err = router.Run(":9090")
 	if err != nil {
 		log.Fatal("Cannot start gin web server....")
 		return

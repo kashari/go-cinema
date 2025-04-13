@@ -44,7 +44,7 @@ const Management: React.FC = () => {
     // @ts-ignore
     formData.append("File", data.File[0]);
     axios
-      .post("http://192.168.3.150:8080/movies", formData, {
+      .post("http://192.168.3.200:9090/movies", formData, {
         method: "POST",
         headers: { "Content-Type": "multipart/form-data" },
         onUploadProgress: (progressEvent: AxiosProgressEvent) => {
@@ -68,7 +68,7 @@ const Management: React.FC = () => {
   };
 
   const onSerieSubmit: SubmitHandler<SerieInputs> = (data) => {
-    axios.post("http://192.168.3.150:8080/series", data).then((response) => {
+    axios.post("http://192.168.3.200:9090/series", data).then((response) => {
       serieReset();
       console.debug(response.data);
       navigate("/series");

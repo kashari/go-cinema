@@ -22,7 +22,7 @@ const SerieList: React.FC = () => {
 
   const onSerieSubmit: SubmitHandler<SerieInputs> = (data) => {
     axios
-      .put(`http://192.168.3.150:8080/series/${updatingSerie?.ID}`, data)
+      .put(`http://192.168.3.200:9090/series/${updatingSerie?.ID}`, data)
       .then((response) => {
         console.debug(response);
       })
@@ -36,7 +36,7 @@ const SerieList: React.FC = () => {
   const [editModal, setEditModal] = useState<boolean>(false);
 
   const handleOpenEditModal = async (id: string) => {
-    const response = await axios.get(`http://192.168.3.150:8080/series/${id}`);
+    const response = await axios.get(`http://192.168.3.200:9090/series/${id}`);
     setUpdatingSerie(response.data);
     setEditModal(true);
 
@@ -55,14 +55,14 @@ const SerieList: React.FC = () => {
   };
 
   const handleFetchSeries = () => {
-    axios.get("http://192.168.3.150:8080/series").then((response) => {
+    axios.get("http://192.168.3.200:9090/series").then((response) => {
       setSeries(response.data);
     });
   };
 
   const handleDelete = (id: string) => {
     axios
-      .delete(`http://192.168.3.150:8080/series/${id}`)
+      .delete(`http://192.168.3.200:9090/series/${id}`)
       .then((response) => {
         console.debug(response);
         handleFetchSeries();
