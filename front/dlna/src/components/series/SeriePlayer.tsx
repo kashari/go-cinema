@@ -29,7 +29,7 @@ const SeriePlayer: React.FC<VideoPlayerProps> = ({
       console.debug("updating video data...", fileMinute);
       axios
         .post(
-          `/episodes/${episodeId}/last-access?time=${fileMinute}`
+          `http://192.168.3.200:9090/episodes/${episodeId}/last-access?time=${fileMinute}`
         )
         .then(() => {
           console.debug("video data updated...");

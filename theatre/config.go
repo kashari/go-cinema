@@ -13,7 +13,7 @@ import (
 )
 
 func InitDB() (db *gorm.DB, err error) {
-	dsn := "host=192.168.3.150 user=misen password=root dbname=theatre port=5432 sslmode=disable TimeZone=Europe/Tirane"
+	dsn := "host=192.168.3.200 user=misen password=root dbname=theatre port=5432 sslmode=disable TimeZone=Europe/Tirane"
 	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
@@ -74,36 +74,30 @@ func SetupRoutes(db *gorm.DB) *gin.Engine {
 		c.Next()
 	})
 
-	r.POST("/login", handler.Login)
-	r.POST("/refresh-token", handler.RefreshToken)
-	r.POST("/register", handler.CreateUser)
+	r.POST("/movies", CreateMovie)
+	r.POST("/movie_special", CreateMovieSpecial)
+	r.PUT("/movies/:id", EditMovie)
+	r.GET("/movies", GetMovies)
+	r.GET("/movies/:id", GetMovie)
+	r.DELETE("/movies/:id", DeleteMovie)
+
 	r.GET("/video", VideoServerHandler)
+	r.GET("/video/download", HandleDownloadFile)
+	r.POST("/last-access/:id", HandleLastAccessForMovie)
+	r.GET("left-at", GetUsageData)
 
-	auth := r.Group("/")
-	auth.Use(AuthMiddleware())
-	{
-		auth.POST("/movies", CreateMovie)
-		auth.PUT("/movies/:id", EditMovie)
-		auth.GET("/movies", GetMovies)
-		auth.GET("/movies/:id", GetMovie)
-		auth.DELETE("/movies/:id", DeleteMovie)
+	r.GET("/series", ListSeries)
+	r.POST("/series", CreateSerie)
+	r.GET("/series/:id", GetSerie)
+	r.PUT("/series/:id", EditSerie)
+	r.DELETE("/series/:id", DeleteSerie)
+	r.POST("series/:id/append", AppendEpisodeToSeries)
+	r.POST("series/:id/special", AppendEpisodeToSeriesSpecial)
+	r.GET("series/:id/episodes", GetSerieEpisodes)
 
-		auth.GET("/video/download", HandleDownloadFile)
-		auth.POST("/last-access/:id", HandleLastAccessForMovie)
-		auth.GET("/left-at", GetUsageData)
-
-		auth.GET("/series", ListSeries)
-		auth.POST("/series", CreateSerie)
-		auth.GET("/series/:id", GetSerie)
-		auth.PUT("/series/:id", EditSerie)
-		auth.DELETE("/series/:id", DeleteSerie)
-		auth.POST("/series/:id/append", AppendEpisodeToSeries)
-		auth.GET("/series/:id/episodes", GetSerieEpisodes)
-
-		auth.POST("/episodes/:id/last-access", HandleLastAccessForEpisode)
-		auth.POST("/series/:id/current", HandleSetSeriesIndex)
-		auth.GET("/series/:id/current", HandleGetLastEpisodeIndex)
-	}
+	r.POST(("/episodes/:id/last-access"), HandleLastAccessForEpisode)
+	r.POST("/series/:id/current", HandleSetSeriesIndex)
+	r.GET("/series/:id/current", HandleGetLastEpisodeIndex)
 
 	return r
 }

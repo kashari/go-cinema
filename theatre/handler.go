@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	usageData = "/application/logs/usage_data.io"
+	usageData = "/home/mkashari/go-cinema/usage-data.io"
 )
 
 func CreateMovie(c *gin.Context) {
@@ -26,7 +26,7 @@ func CreateMovie(c *gin.Context) {
 		c.String(http.StatusBadRequest, "Error retrieving file: %s", err.Error())
 		return
 	}
-	savePath := "/Media/go_cinema/Movies"
+	savePath := "/home/mkashari/UMS"
 
 	destinationFile, err := os.Create(savePath + "/" + header.Filename)
 	if err != nil {
@@ -47,6 +47,25 @@ func CreateMovie(c *gin.Context) {
 		Description: c.Request.FormValue("Description"),
 		ResumeAt:    "00:00",
 	}
+
+	result := db.Create(&movie)
+	if result.Error != nil {
+		c.String(http.StatusInternalServerError, "Error creating movie record: %s", result.Error.Error())
+		return
+	}
+
+	c.JSON(http.StatusCreated, movie)
+}
+
+func CreateMovieSpecial(c *gin.Context) {
+	db := c.MustGet("db").(*gorm.DB)
+	var movie Movie
+	if err := c.ShouldBindJSON(&movie); err != nil {
+		c.String(http.StatusInternalServerError, "Error creating movie record: %s", err)
+		return
+	}
+
+	movie.ResumeAt = "00:00"
 
 	result := db.Create(&movie)
 	if result.Error != nil {
@@ -127,45 +146,79 @@ func GetMovie(c *gin.Context) {
 }
 
 func VideoServerHandler(c *gin.Context) {
-    fileName := c.Query("file")
-    log.Println("Serving video file", fileName)
+	fileName := c.Query("file")
+	log.Println("Serving video file:", fileName)
 
-    file, err := ServeVideo(fileName)
-    if err != nil {
-        c.String(http.StatusInternalServerError, "Error opening file: %s", err.Error())
-        return
-    }
-    defer file.Close()
+	file, err := ServeVideo(fileName)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Error opening file: %s", err.Error())
+		return
+	}
+	defer file.Close()
 
-    fileInfo, err := file.Stat()
-    if err != nil {
-        log.Println("Error getting file info:", err)
-        c.String(http.StatusInternalServerError, "Error reading file info")
-        return
-    }
+	fileSize := GetFileSize(file)
 
-    c.Header("Content-Type", "video/mp4")
-    c.Header("Content-Length", strconv.FormatInt(fileInfo.Size(), 10))
+	handleRangeRequests(c.Writer, c.Request, file, fileSize)
+}
 
-    // Stream in chunks using a goroutine
-    go func() {
-        const chunkSize = 32 * 1024 // 32KB chunks
-        for {
-            n, err := io.CopyN(c.Writer, file, chunkSize)
-            if n > 0 {
-                if f, ok := c.Writer.(http.Flusher); ok {
-                    f.Flush()
-                }
-            }
-            if err == io.EOF {
-                break
-            }
-            if err != nil {
-                log.Println("Error during streaming:", err)
-                break
-            }
-        }
-    }()
+func handleRangeRequests(w http.ResponseWriter, r *http.Request, file *os.File, fileSize int64) {
+	rangeHeader := r.Header.Get("Range")
+
+	if rangeHeader == "" {
+		w.Header().Set("Content-Type", "video/mp4")
+		w.Header().Set("Accept-Ranges", "bytes")
+		w.Header().Set("Content-Length", strconv.FormatInt(fileSize, 10))
+
+		if _, err := io.CopyN(w, file, fileSize); err != nil {
+			log.Println("Error during streaming:", err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	serveRange(w, r, file, rangeHeader, fileSize)
+}
+
+func serveRange(w http.ResponseWriter, r *http.Request, file *os.File, rangeHeader string, fileSize int64) {
+	rangeSpec := strings.TrimPrefix(rangeHeader, "bytes=")
+	rangeParts := strings.Split(rangeSpec, "-")
+	start, end := parseRange(rangeParts, fileSize)
+
+	w.Header().Set("Content-Type", "video/mp4")
+	w.Header().Set("Accept-Ranges", "bytes")
+	w.Header().Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, end, fileSize))
+	w.Header().Set("Content-Length", strconv.FormatInt(end-start+1, 10))
+	w.WriteHeader(http.StatusPartialContent)
+
+	if _, err := file.Seek(start, io.SeekStart); err != nil {
+		log.Println("Error seeking to the range:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if _, err := io.CopyN(w, file, end-start+1); err != nil {
+		log.Println("Error during range streaming:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
+
+func parseRange(rangeParts []string, fileSize int64) (start, end int64) {
+	if len(rangeParts) < 2 {
+		return 0, fileSize - 1
+	}
+
+	start, _ = strconv.ParseInt(rangeParts[0], 10, 64)
+	if rangeParts[1] != "" {
+		end, _ = strconv.ParseInt(rangeParts[1], 10, 64)
+	} else {
+		end = fileSize - 1
+	}
+
+	if end >= fileSize {
+		end = fileSize - 1
+	}
+
+	return start, end
 }
 
 func UpdateUsageData(data []byte) {
@@ -259,7 +312,7 @@ func CreateSerie(c *gin.Context) {
 		return
 	}
 
-	basedir := "/Media/go_cinema/Series/"
+	basedir := "/home/mkashari/UMS/Series/"
 
 	err := os.MkdirAll(basedir+serie.Title, os.ModePerm)
 	if err != nil {
@@ -356,7 +409,7 @@ func EditSerie(c *gin.Context) {
 func AppendEpisodeToSeries(c *gin.Context) {
 	db := c.MustGet("db").(*gorm.DB)
 	id := c.Param("id")
-	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 5<<30) // 5GB
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 20<<30) // 5GB
 	file, header, err := c.Request.FormFile("File")
 
 	var serie Series
@@ -390,6 +443,38 @@ func AppendEpisodeToSeries(c *gin.Context) {
 
 	episode := Episode{
 		Path:         serie.BaseDir + "/" + header.Filename,
+		ResumeAt:     "00:00",
+		EpisodeIndex: currentIndex + 1,
+		SeriesID:     serie.ID,
+	}
+
+	result := db.Create(&episode)
+	if result.Error != nil {
+		c.String(http.StatusInternalServerError, "Error creating episode record: %s", result.Error.Error())
+		return
+	}
+
+	c.JSON(http.StatusCreated, episode)
+}
+
+func AppendEpisodeToSeriesSpecial(c *gin.Context) {
+	db := c.MustGet("db").(*gorm.DB)
+	id := c.Param("id")
+	filename := c.Query("filename")
+
+	var serie Series
+	if err := db.Preload("Episodes").First(&serie, id).Error; err != nil {
+		c.String(http.StatusNotFound, "Serie not found: %s", err.Error())
+		return
+	}
+
+	currentIndex := 0
+	if serie.Episodes != nil {
+		currentIndex = len(serie.Episodes)
+	}
+
+	episode := Episode{
+		Path:         serie.BaseDir + "/" + filename,
 		ResumeAt:     "00:00",
 		EpisodeIndex: currentIndex + 1,
 		SeriesID:     serie.ID,

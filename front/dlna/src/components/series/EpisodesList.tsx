@@ -40,7 +40,7 @@ const EpisodesList: React.FC = () => {
     formData.append("File", data.File[0]);
 
     axios
-      .post(`/series/${id}/append`, formData, {
+      .post(`http://192.168.3.200:9090/series/${id}/append`, formData, {
         method: "POST",
         headers: { "Content-Type": "multipart/form-data" },
         onUploadProgress: (progressEvent: AxiosProgressEvent) => {
@@ -64,7 +64,7 @@ const EpisodesList: React.FC = () => {
 
   const handleGetCurrentEpisodeIndex = useCallback(async () => {
     axios
-      .get(`/series/${id}/current`)
+      .get(`http://192.168.3.200:9090/series/${id}/current`)
       .then((response) => {
         console.debug(response);
         setCurrentIndex(response.data.index);
@@ -73,7 +73,7 @@ const EpisodesList: React.FC = () => {
 
   const handleSetCurrentEpisodeIndex = async (index: number) => {
     axios
-      .post(`/series/${id}/current?index=${index}`)
+      .post(`http://192.168.3.200:9090/series/${id}/current?index=${index}`)
       .then((response) => {
         console.debug(response);
       });
@@ -81,7 +81,7 @@ const EpisodesList: React.FC = () => {
 
   const handleOpenVideoModal = (index: number) => {
     setVideoEndpoint(
-      `http://192.168.3.150:8080/video?file=${episodes[index - 1].Path}`
+      `http://192.168.3.200:9090/video?file=${episodes[index - 1].Path}`
     );
     handleSetCurrentEpisodeIndex(index);
     setCurrentEpisodePlaying(episodes[index - 1]);
@@ -113,7 +113,7 @@ const EpisodesList: React.FC = () => {
 
   const handleFetchEpisodes = useCallback(() => {
     axios
-      .get(`/series/${id}/episodes`)
+      .get(`http://192.168.3.200:9090/series/${id}/episodes`)
       .then((response) => {
         setEpisodes(response.data);
       });

@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var LOGFILEBASE = "/application/logs/"
+var LOGFILEBASE = "/home/mkashari/go-cinema/logs/"
 var _log *log.Logger
 var _f *os.File
 var _today time.Time = time.Now()
