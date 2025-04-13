@@ -1,6 +1,7 @@
 package extras
 
 import (
+	"errors"
 	"go-cinema/model"
 	"time"
 
