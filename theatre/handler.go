@@ -157,7 +157,6 @@ func VideoServerHandler(c *gin.Context) {
 	defer file.Close()
 
 	fileSize := GetFileSize(file)
-
 	handleRangeRequests(c.Writer, c.Request, file, fileSize)
 }
 
@@ -165,60 +164,23 @@ func handleRangeRequests(w http.ResponseWriter, r *http.Request, file *os.File, 
 	rangeHeader := r.Header.Get("Range")
 
 	if rangeHeader == "" {
-		w.Header().Set("Content-Type", "video/mp4")
-		w.Header().Set("Accept-Ranges", "bytes")
 		w.Header().Set("Content-Length", strconv.FormatInt(fileSize, 10))
-
-		if _, err := io.CopyN(w, file, fileSize); err != nil {
-			log.Println("Error during streaming:", err)
-			w.WriteHeader(http.StatusInternalServerError)
+		fileInfo, err := file.Stat()
+		if err != nil {
+			log.Println("Error getting file info", err)
+			return
 		}
+		http.ServeContent(w, r, file.Name(), fileInfo.ModTime(), file)
 		return
 	}
 
-	serveRange(w, r, file, rangeHeader, fileSize)
-}
-
-func serveRange(w http.ResponseWriter, r *http.Request, file *os.File, rangeHeader string, fileSize int64) {
-	rangeSpec := strings.TrimPrefix(rangeHeader, "bytes=")
-	rangeParts := strings.Split(rangeSpec, "-")
-	start, end := parseRange(rangeParts, fileSize)
-
-	w.Header().Set("Content-Type", "video/mp4")
-	w.Header().Set("Accept-Ranges", "bytes")
-	w.Header().Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, end, fileSize))
-	w.Header().Set("Content-Length", strconv.FormatInt(end-start+1, 10))
-	w.WriteHeader(http.StatusPartialContent)
-
-	if _, err := file.Seek(start, io.SeekStart); err != nil {
-		log.Println("Error seeking to the range:", err)
-		w.WriteHeader(http.StatusInternalServerError)
+	fileInfo, err := file.Stat()
+	if err != nil {
+		log.Println("Error getting file info", err)
 		return
 	}
 
-	if _, err := io.CopyN(w, file, end-start+1); err != nil {
-		log.Println("Error during range streaming:", err)
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-}
-
-func parseRange(rangeParts []string, fileSize int64) (start, end int64) {
-	if len(rangeParts) < 2 {
-		return 0, fileSize - 1
-	}
-
-	start, _ = strconv.ParseInt(rangeParts[0], 10, 64)
-	if rangeParts[1] != "" {
-		end, _ = strconv.ParseInt(rangeParts[1], 10, 64)
-	} else {
-		end = fileSize - 1
-	}
-
-	if end >= fileSize {
-		end = fileSize - 1
-	}
-
-	return start, end
+	http.ServeContent(w, r, file.Name(), fileInfo.ModTime(), file)
 }
 
 func UpdateUsageData(data []byte) {
