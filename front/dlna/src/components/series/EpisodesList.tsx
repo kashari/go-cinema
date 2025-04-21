@@ -84,15 +84,16 @@ const EpisodesList: React.FC = () => {
       `http://192.168.3.200:9090/video?file=${episodes[index - 1].Path}`
     );
     handleSetCurrentEpisodeIndex(index);
+    setCurrentIndex(index);
     setCurrentEpisodePlaying(episodes[index - 1]);
     setVideoModal(true);
   };
 
   const switchToNextEpisode = async () => {
-    if (document.fullscreenEnabled) document.exitFullscreen();
     handleCloseVideoModal();
 
     const nextIndex = currentIndex + 1;
+    console.debug("Next index:", nextIndex);
 
     if (nextIndex < episodes.length) {
       await handleSetCurrentEpisodeIndex(nextIndex);
