@@ -3,6 +3,7 @@ package theatre
 import (
 	"encoding/json"
 	"fmt"
+	"go-cinema/stream"
 	"io"
 	"log"
 	"net/http"
@@ -180,7 +181,7 @@ func handleRangeRequests(w http.ResponseWriter, r *http.Request, file *os.File, 
 		return
 	}
 
-	http.ServeContent(w, r, file.Name(), fileInfo.ModTime(), file)
+	stream.Stream(w, r, file.Name(), fileInfo.ModTime(), file)
 }
 
 func UpdateUsageData(data []byte) {
