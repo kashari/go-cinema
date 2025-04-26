@@ -2,18 +2,16 @@ package main
 
 import (
 	"flag"
+	entity "go-cinema/entities"
 	"go-cinema/model"
+	repo "go-cinema/repository"
 	"go-cinema/theatre"
 	"log"
-
-	"github.com/gin-gonic/gin"
 )
 
 type functionsMap map[string]func()
 
 func main() {
-	gin.DisableConsoleColor()
-
 	db, err := theatre.InitDB()
 	if err != nil {
 		log.Fatal("Cannot connect to the database...")
@@ -27,7 +25,7 @@ func main() {
 				log.Printf("Cannot connect to the database due to: %v", err)
 			}
 
-			err = db.AutoMigrate(&model.User{}, &theatre.Movie{}, &theatre.Series{}, &theatre.Episode{})
+			err = db.AutoMigrate(&model.User{}, &entity.Movie{}, &entity.Series{}, &entity.Episode{})
 			if err != nil {
 				log.Printf("Cannot map models to the database due to: %v", err)
 				return
@@ -48,12 +46,15 @@ func main() {
 		return
 	}
 
+	repo.InitRepositories(db)
+
 	router := theatre.SetupRoutes(db)
 
-	err = router.Run(":9090")
-	if err != nil {
-		log.Fatal("Cannot start gin web server....")
-		return
+	// Start the server on port 9090.
+	port := "9090"
+	log.Printf("Server starting on port %s", port)
+	if err := router.Start(port); err != nil {
+		log.Fatalf("Server failed: %v", err)
 	}
 
 }

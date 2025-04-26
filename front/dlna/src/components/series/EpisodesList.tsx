@@ -67,7 +67,7 @@ const EpisodesList: React.FC = () => {
       .get(`http://192.168.3.200:9090/series/${id}/current`)
       .then((response) => {
         console.debug(response);
-        setCurrentIndex(response.data.index);
+        setCurrentIndex(response.data);
       });
   }, [id]);
 
@@ -261,7 +261,8 @@ const EpisodesList: React.FC = () => {
         </Modal>
       </div>
 
-      <FullScreenVideo
+      { currentIndex && (
+        <FullScreenVideo
         isOpen={videoModal}
         episodeId={currentEpisodePlaying?.ID.toString() ?? ""}
         url={videoEndpoint}
@@ -273,6 +274,7 @@ const EpisodesList: React.FC = () => {
         }
         onEnded={switchToNextEpisode}
       />
+      )}
     </>
   );
 };
