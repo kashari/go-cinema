@@ -1,4 +1,4 @@
-package theatre
+package entity
 
 import (
 	"log"

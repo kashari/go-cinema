@@ -3,15 +3,16 @@ package theatre
 import (
 	"encoding/json"
 	"fmt"
-	"go-cinema/stream"
+	entity "go-cinema/entities"
+	repo "go-cinema/repository"
+	videostream "go-cinema/video"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 
-	"github.com/gin-gonic/gin"
+	gjallarhorn "github.com/kashari/gjallarhorn/engine"
 	"gorm.io/gorm"
 )
 
@@ -19,78 +20,79 @@ var (
 	usageData = "/home/mkashari/go-cinema/usage-data.io"
 )
 
-func CreateMovie(c *gin.Context) {
-	db := c.MustGet("db").(*gorm.DB)
+func CreateMovie(c *gjallarhorn.Context) {
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 5<<30) // 5GB
 	file, header, err := c.Request.FormFile("File")
 	if err != nil {
-		c.String(http.StatusBadRequest, "Error retrieving file: %s", err.Error())
+		c.String(http.StatusBadRequest, fmt.Sprintf("Error retrieving file: %s", err.Error()))
 		return
 	}
 	savePath := "/home/mkashari/UMS"
 
 	destinationFile, err := os.Create(savePath + "/" + header.Filename)
 	if err != nil {
-		c.String(http.StatusInternalServerError, "Error creating file: %s", err.Error())
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error creating file: %s", err.Error()))
 		return
 	}
 
 	defer destinationFile.Close()
 
 	if _, err := io.Copy(destinationFile, file); err != nil {
-		c.String(http.StatusInternalServerError, "Error saving file: %s", err.Error())
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error saving file: %s", err.Error()))
 		return
 	}
 
-	movie := Movie{
+	movie := entity.Movie{
 		Title:       c.Request.FormValue("Title"),
 		Path:        savePath + "/" + header.Filename,
 		Description: c.Request.FormValue("Description"),
 		ResumeAt:    "00:00",
 	}
 
-	result := db.Create(&movie)
-	if result.Error != nil {
-		c.String(http.StatusInternalServerError, "Error creating movie record: %s", result.Error.Error())
+	err = repo.MovieRepository.Save(&movie)
+	if err != nil {
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error creating movie record: %s", err.Error()))
 		return
 	}
 
 	c.JSON(http.StatusCreated, movie)
 }
 
-func CreateMovieSpecial(c *gin.Context) {
-	db := c.MustGet("db").(*gorm.DB)
-	var movie Movie
-	if err := c.ShouldBindJSON(&movie); err != nil {
-		c.String(http.StatusInternalServerError, "Error creating movie record: %s", err)
+func CreateMovieSpecial(c *gjallarhorn.Context) {
+	var movie entity.Movie
+	if err := c.BindJSON(&movie); err != nil {
+		c.String(http.StatusBadRequest, fmt.Sprintf("Error binding json: %s", err.Error()))
 		return
 	}
 
 	movie.ResumeAt = "00:00"
 
-	result := db.Create(&movie)
-	if result.Error != nil {
-		c.String(http.StatusInternalServerError, "Error creating movie record: %s", result.Error.Error())
+	err := repo.MovieRepository.Save(&movie)
+	if err != nil {
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error creating movie record: %s", err.Error()))
 		return
 	}
 
 	c.JSON(http.StatusCreated, movie)
 }
 
-func EditMovie(c *gin.Context) {
-	db := c.MustGet("db").(*gorm.DB)
+func EditMovie(c *gjallarhorn.Context) {
 	id := c.Param("id")
-
-	var movie Movie
-	if err := db.First(&movie, id).Error; err != nil {
-		c.String(http.StatusNotFound, "Movie not found: %s", err.Error())
+	movie_id, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		c.String(http.StatusBadRequest, fmt.Sprintf("Invalid movie ID: %s", err.Error()))
 		return
 	}
 
-	var movieReq MovieRequest
+	movie, err := repo.MovieRepository.FindByID(uint(movie_id))
+	if err != nil {
+		c.String(http.StatusNotFound, fmt.Sprintf("Movie not found: %s", err.Error()))
+		return
+	}
+	var movieReq entity.MovieRequest
 
-	if err := c.ShouldBindJSON(&movieReq); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+	if err := c.BindJSON(&movieReq); err != nil {
+		c.JSON(400, fmt.Sprintf("Error binding json: %s", err.Error()))
 		return
 	}
 
@@ -102,62 +104,88 @@ func EditMovie(c *gin.Context) {
 		movie.Description = movieReq.Description
 	}
 
-	result := db.Save(&movie)
-	if result.Error != nil {
-		c.String(http.StatusInternalServerError, "Error updating movie record: %s", result.Error.Error())
-		return
-	}
-}
-
-func DeleteMovie(c *gin.Context) {
-	db := c.MustGet("db").(*gorm.DB)
-	id := c.Param("id")
-
-	var movie Movie
-	if err := db.First(&movie, id).Error; err != nil {
-		c.String(http.StatusNotFound, "Movie not found: %s", err.Error())
+	err = repo.MovieRepository.Save(movie)
+	if err != nil {
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error updating movie record: %s", err.Error()))
 		return
 	}
 
-	result := db.Delete(&movie)
-	if result.Error != nil {
-		c.String(http.StatusInternalServerError, "Error deleting movie record: %s", result.Error.Error())
-		return
-	}
-	os.Remove(movie.Path)
-}
-
-func GetMovies(c *gin.Context) {
-	db := c.MustGet("db").(*gorm.DB)
-	var movies []Movie
-	db.Find(&movies)
-	c.JSON(http.StatusOK, movies)
-}
-
-func GetMovie(c *gin.Context) {
-	db := c.MustGet("db").(*gorm.DB)
-	id := c.Param("id")
-
-	var movie Movie
-	if err := db.First(&movie, id).Error; err != nil {
-		c.String(http.StatusNotFound, "Movie not found: %s", err.Error())
-		return
-	}
 	c.JSON(http.StatusOK, movie)
 }
 
-func VideoServerHandler(c *gin.Context) {
-	fileName := c.Query("file")
+func DeleteMovie(c *gjallarhorn.Context) {
+	id, err := c.ParamInt("id")
+	if err != nil {
+		c.String(http.StatusBadRequest, fmt.Sprintf("Invalid movie ID: %s", err.Error()))
+		return
+	}
+
+	movie, err := repo.MovieRepository.FindByID(uint(id))
+	if err != nil {
+		c.String(http.StatusNotFound, fmt.Sprintf("Movie not found: %s", err.Error()))
+		return
+	}
+
+	err = repo.MovieRepository.DeleteByID(uint(id))
+	if err != nil {
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error deleting movie record: %s", err.Error()))
+		return
+	}
+
+	os.Remove(movie.Path)
+
+	c.String(http.StatusOK, "Movie deleted successfully")
+}
+
+func GetMovies(c *gjallarhorn.Context) {
+	movies, err := repo.MovieRepository.FindAll()
+	if err != nil {
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error retrieving movies: %s", err.Error()))
+		return
+	}
+	c.JSON(http.StatusOK, movies.ToSlice())
+}
+
+func GetMovie(c *gjallarhorn.Context) {
+	id, err := c.ParamInt("id")
+	if err != nil {
+		c.String(http.StatusBadRequest, fmt.Sprintf("Invalid movie ID: %s", err.Error()))
+		return
+	}
+
+	movie, err := repo.MovieRepository.FindByID(uint(id))
+	if err != nil {
+		c.String(http.StatusNotFound, fmt.Sprintf("Movie not found: %s", err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, movie)
+}
+
+func VideoStreamer(c *gjallarhorn.Context) {
+	fileName := c.QueryParam("file")
 	log.Println("Serving video file:", fileName)
 
-	file, err := ServeVideo(fileName)
+	err := videostream.StreamVideo(c.Writer, c.Request, fileName)
 	if err != nil {
-		c.String(http.StatusInternalServerError, "Error opening file: %s", err.Error())
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error opening video file: %s", err.Error()))
+		return
+	}
+
+}
+
+func VideoServerHandler(c *gjallarhorn.Context) {
+	fileName := c.QueryParam("file")
+	log.Println("Serving video file:", fileName)
+
+	file, err := entity.ServeVideo(fileName)
+	if err != nil {
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error opening video file: %s", err.Error()))
 		return
 	}
 	defer file.Close()
 
-	fileSize := GetFileSize(file)
+	fileSize := entity.GetFileSize(file)
 	handleRangeRequests(c.Writer, c.Request, file, fileSize)
 }
 
@@ -181,7 +209,7 @@ func handleRangeRequests(w http.ResponseWriter, r *http.Request, file *os.File, 
 		return
 	}
 
-	stream.Stream(w, r, file.Name(), fileInfo.ModTime(), file)
+	http.ServeContent(w, r, file.Name(), fileInfo.ModTime(), file)
 }
 
 func UpdateUsageData(data []byte) {
@@ -194,20 +222,23 @@ func UpdateUsageData(data []byte) {
 	fmt.Println("Last access watching updated.")
 }
 
-func HandleLastAccessForMovie(c *gin.Context) {
-	db := c.MustGet("db").(*gorm.DB)
-	id := c.Param("id")
-
-	var movie Movie
-	if err := db.First(&movie, id).Error; err != nil {
-		c.String(http.StatusNotFound, "Movie not found: %s", err.Error())
+func HandleLastAccessForMovie(c *gjallarhorn.Context) {
+	id, err := c.ParamInt("id")
+	if err != nil {
+		c.String(http.StatusBadRequest, fmt.Sprintf("Invalid movie ID: %s", err.Error()))
 		return
 	}
 
-	movie.ResumeAt = c.Query("time")
-	result := db.Save(&movie)
-	if result.Error != nil {
-		c.String(http.StatusInternalServerError, "Error updating movie record: %s", result.Error.Error())
+	movie, err := repo.MovieRepository.FindByID(uint(id))
+	if err != nil {
+		c.String(http.StatusNotFound, fmt.Sprintf("Movie not found: %s", err.Error()))
+		return
+	}
+
+	movie.ResumeAt = c.QueryParam("time")
+	err = repo.MovieRepository.Save(movie)
+	if err != nil {
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error updating movie record: %s", err.Error()))
 		return
 	}
 
@@ -218,7 +249,7 @@ func HandleLastAccessForMovie(c *gin.Context) {
 	UpdateUsageData(jsonMovie)
 }
 
-func GetUsageData(c *gin.Context) {
+func GetUsageData(c *gjallarhorn.Context) {
 	file, err := os.Open(usageData)
 	if err != nil {
 		fmt.Println("Something went wrong reading the data: ", err)
@@ -251,27 +282,11 @@ func Pop(words *[]string) string {
 	return rv
 }
 
-func HandleDownloadFile(c *gin.Context) {
-	filePath := c.Query("file")
-	words := strings.Split(filePath, "/")
-	fileName := Pop(&words)
-
-	log.Println(fileName)
-	file, err := GetFile(filePath)
-	if err != nil {
-		c.String(http.StatusInternalServerError, "Error opening file: %s", err.Error())
-		return
-	}
-	defer file.Close()
-	c.FileAttachment(filePath, fileName)
-}
-
-func CreateSerie(c *gin.Context) {
-	var serie Series
-	db := c.MustGet("db").(*gorm.DB)
-	if err := c.ShouldBindJSON(&serie); err != nil {
+func CreateSerie(c *gjallarhorn.Context) {
+	var serie entity.Series
+	if err := c.BindJSON(&serie); err != nil {
 		fmt.Printf("Error binding json: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, fmt.Sprintf("Error binding json: %s", err.Error()))
 		return
 	}
 
@@ -280,7 +295,7 @@ func CreateSerie(c *gin.Context) {
 	err := os.MkdirAll(basedir+serie.Title, os.ModePerm)
 	if err != nil {
 		fmt.Printf("Error creating directory: %s", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, fmt.Sprintf("Error creating directory: %s", err.Error()))
 		return
 	}
 
@@ -288,69 +303,85 @@ func CreateSerie(c *gin.Context) {
 
 	serie.CurrentIndex = 0
 
-	result := db.Create(&serie)
-	if result.Error != nil {
-		c.String(http.StatusInternalServerError, "Error creating serie record: %s", result.Error.Error())
+	err = repo.SeriesRepository.Save(&serie)
+	if err != nil {
+		fmt.Printf("Error creating serie record: %s", err.Error())
+		c.JSON(http.StatusInternalServerError, fmt.Sprintf("Error creating serie record: %s", err.Error()))
 		return
 	}
+	c.JSON(http.StatusCreated, serie)
 }
 
-func ListSeries(c *gin.Context) {
-	db := c.MustGet("db").(*gorm.DB)
-	var series []Series
-	db.Find(&series)
-	c.JSON(http.StatusOK, series)
-}
-
-func GetSerie(c *gin.Context) {
-	db := c.MustGet("db").(*gorm.DB)
-	id := c.Param("id")
-
-	var serie Series
-	if err := db.First(&serie, id).Error; err != nil {
-		c.String(http.StatusNotFound, "Serie not found: %s", err.Error())
+func ListSeries(c *gjallarhorn.Context) {
+	series, err := repo.SeriesRepository.FindAll()
+	if err != nil {
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error retrieving series: %s", err.Error()))
 		return
 	}
+
+	c.JSON(http.StatusOK, series.ToSlice())
+}
+
+func GetSerie(c *gjallarhorn.Context) {
+	id, err := c.ParamInt("id")
+	if err != nil {
+		c.String(http.StatusBadRequest, fmt.Sprintf("Invalid serie ID: %s", err.Error()))
+		return
+	}
+
+	serie, err := repo.SeriesRepository.FindByID(uint(id))
+	if err != nil {
+		c.String(http.StatusNotFound, fmt.Sprintf("Serie not found: %s", err.Error()))
+		return
+	}
+
 	c.JSON(http.StatusOK, serie)
 }
 
-func DeleteSerie(c *gin.Context) {
-	db := c.MustGet("db").(*gorm.DB)
-	id := c.Param("id")
-
-	var serie Series
-	if err := db.First(&serie, id).Error; err != nil {
-		c.String(http.StatusNotFound, "Serie not found: %s", err.Error())
-		return
-	}
-
-	err := os.RemoveAll(serie.BaseDir)
+func DeleteSerie(c *gjallarhorn.Context) {
+	id, err := c.ParamInt("id")
 	if err != nil {
-		c.String(http.StatusInternalServerError, "Error deleting directory: %s", err.Error())
+		c.String(http.StatusBadRequest, fmt.Sprintf("Invalid serie ID: %s", err.Error()))
 		return
 	}
 
-	result := db.Delete(&serie)
-	if result.Error != nil {
-		c.String(http.StatusInternalServerError, "Error deleting serie record: %s", result.Error.Error())
+	serie, err := repo.SeriesRepository.FindByID(uint(id))
+	if err != nil {
+		c.String(http.StatusNotFound, fmt.Sprintf("Serie not found: %s", err.Error()))
 		return
 	}
+
+	err = os.RemoveAll(serie.BaseDir)
+	if err != nil {
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error deleting serie directory: %s", err.Error()))
+		return
+	}
+
+	err = repo.SeriesRepository.DeleteByID(uint(id))
+	if err != nil {
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error deleting serie record: %s", err.Error()))
+		return
+	}
+	c.String(http.StatusOK, "Serie deleted successfully")
 }
 
-func EditSerie(c *gin.Context) {
-	db := c.MustGet("db").(*gorm.DB)
-	id := c.Param("id")
-
-	var serie Series
-	if err := db.First(&serie, id).Error; err != nil {
-		c.String(http.StatusNotFound, "Serie not found: %s", err.Error())
+func EditSerie(c *gjallarhorn.Context) {
+	id, err := c.ParamInt("id")
+	if err != nil {
+		c.String(http.StatusBadRequest, fmt.Sprintf("Invalid serie ID: %s", err.Error()))
 		return
 	}
 
-	var serieReq SeriesRequest
+	serie, err := repo.SeriesRepository.FindByID(uint(id))
+	if err != nil {
+		c.String(http.StatusNotFound, fmt.Sprintf("Serie not found: %s", err.Error()))
+		return
+	}
 
-	if err := c.ShouldBindJSON(&serieReq); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+	var serieReq entity.SeriesRequest
+
+	if err := c.BindJSON(&serieReq); err != nil {
+		c.JSON(400, fmt.Sprintf("Error binding json: %s", err.Error()))
 		return
 	}
 
@@ -362,138 +393,171 @@ func EditSerie(c *gin.Context) {
 		serie.Description = serieReq.Description
 	}
 
-	result := db.Save(&serie)
-	if result.Error != nil {
-		c.String(http.StatusInternalServerError, "Error updating serie record: %s", result.Error.Error())
+	err = repo.SeriesRepository.Save(serie)
+	if err != nil {
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error updating serie record: %s", err.Error()))
 		return
 	}
+	c.JSON(http.StatusOK, serie)
 }
 
-func AppendEpisodeToSeries(c *gin.Context) {
-	db := c.MustGet("db").(*gorm.DB)
-	id := c.Param("id")
+func AppendEpisodeToSeries(c *gjallarhorn.Context) {
+	id, err := c.ParamInt("id")
+	if err != nil {
+		c.String(http.StatusBadRequest, fmt.Sprintf("Invalid serie ID: %s", err.Error()))
+		return
+	}
+
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 20<<30) // 5GB
 	file, header, err := c.Request.FormFile("File")
 
-	var serie Series
-	if err := db.Preload("Episodes").First(&serie, id).Error; err != nil {
-		c.String(http.StatusNotFound, "Serie not found: %s", err.Error())
+	serie, err := repo.SeriesRepository.FindByID(uint(id))
+	if err != nil {
+		c.String(http.StatusNotFound, fmt.Sprintf("Serie not found: %s", err.Error()))
 		return
 	}
 
+	// get all episodes by querying the database
+	query := func(db *gorm.DB) *gorm.DB {
+		return db.Where("series_id = ?", id)
+	}
+
+	episodes, err := repo.EpisodeRepository.FindByQuery(query)
 	if err != nil {
-		c.String(http.StatusBadRequest, "Error retrieving file: %s", err.Error())
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error retrieving episodes: %s", err.Error()))
 		return
 	}
 
 	destinationFile, err := os.Create(serie.BaseDir + "/" + header.Filename)
 	if err != nil {
-		c.String(http.StatusInternalServerError, "Error creating file: %s", err.Error())
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error creating file: %s", err.Error()))
 		return
 	}
 
 	defer destinationFile.Close()
 
 	if _, err := io.Copy(destinationFile, file); err != nil {
-		c.String(http.StatusInternalServerError, "Error saving file: %s", err.Error())
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error saving file: %s", err.Error()))
 		return
 	}
 
-	currentIndex := 0
-	if serie.Episodes != nil {
-		currentIndex = len(serie.Episodes)
-	}
+	currentIndex := episodes.Size()
 
-	episode := Episode{
+	episode := entity.Episode{
 		Path:         serie.BaseDir + "/" + header.Filename,
 		ResumeAt:     "00:00",
 		EpisodeIndex: currentIndex + 1,
 		SeriesID:     serie.ID,
 	}
 
-	result := db.Create(&episode)
-	if result.Error != nil {
-		c.String(http.StatusInternalServerError, "Error creating episode record: %s", result.Error.Error())
+	err = repo.EpisodeRepository.Save(&episode)
+	if err != nil {
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error creating episode record: %s", err.Error()))
 		return
 	}
 
 	c.JSON(http.StatusCreated, episode)
 }
 
-func AppendEpisodeToSeriesSpecial(c *gin.Context) {
-	db := c.MustGet("db").(*gorm.DB)
-	id := c.Param("id")
-	filename := c.Query("filename")
+func AppendEpisodeToSeriesSpecial(c *gjallarhorn.Context) {
+	id, err := c.ParamInt("id")
+	if err != nil {
+		c.String(http.StatusBadRequest, fmt.Sprintf("Invalid serie ID: %s", err.Error()))
+		return
+	}
+	filename := c.QueryParam("filename")
 
-	var serie Series
-	if err := db.Preload("Episodes").First(&serie, id).Error; err != nil {
-		c.String(http.StatusNotFound, "Serie not found: %s", err.Error())
+	serie, err := repo.SeriesRepository.FindByID(uint(id))
+	if err != nil {
+		c.String(http.StatusNotFound, fmt.Sprintf("Serie not found: %s", err.Error()))
 		return
 	}
 
-	currentIndex := 0
-	if serie.Episodes != nil {
-		currentIndex = len(serie.Episodes)
+	// get all episodes by querying the database
+	query := func(db *gorm.DB) *gorm.DB {
+		return db.Where("series_id = ?", id)
 	}
 
-	episode := Episode{
+	episodes, err := repo.EpisodeRepository.FindByQuery(query)
+	if err != nil {
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error retrieving episodes: %s", err.Error()))
+		return
+	}
+
+	currentIndex := episodes.Size()
+
+	episode := entity.Episode{
 		Path:         serie.BaseDir + "/" + filename,
 		ResumeAt:     "00:00",
 		EpisodeIndex: currentIndex + 1,
 		SeriesID:     serie.ID,
 	}
 
-	result := db.Create(&episode)
-	if result.Error != nil {
-		c.String(http.StatusInternalServerError, "Error creating episode record: %s", result.Error.Error())
+	err = repo.EpisodeRepository.Save(&episode)
+	if err != nil {
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error creating episode record: %s", err.Error()))
 		return
 	}
 
 	c.JSON(http.StatusCreated, episode)
 }
 
-func GetSerieEpisodes(c *gin.Context) {
-	db := c.MustGet("db").(*gorm.DB)
-	id := c.Param("id")
-
-	var serie Series
-	if err := db.First(&serie, id).Error; err != nil {
-		c.String(http.StatusNotFound, "Serie not found: %s", err.Error())
+func GetSerieEpisodes(c *gjallarhorn.Context) {
+	id, err := c.ParamInt("id")
+	if err != nil {
+		c.String(http.StatusBadRequest, fmt.Sprintf("Invalid serie ID: %s", err.Error()))
 		return
 	}
 
-	var episodes []Episode
-	db.Model(&serie).Association("Episodes").Find(&episodes)
+	// get all episodes by querying the database
+	query := func(db *gorm.DB) *gorm.DB {
+		return db.Where("series_id = ?", id)
+	}
 
-	MergeSortEpisodesByIndex(&episodes)
+	episodes, err := repo.EpisodeRepository.FindByQuery(query)
+	if err != nil {
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error retrieving episodes: %s", err.Error()))
+		return
+	}
 
-	c.JSON(http.StatusOK, episodes)
+	episodesList := episodes.ToSlice()
+	if len(episodesList) == 0 {
+		c.String(http.StatusNotFound, "No episodes found for this series")
+		return
+	}
+
+	MergeSortEpisodesByIndex(&episodesList)
+
+	c.JSON(http.StatusOK, episodesList)
 }
 
-func HandleLastAccessForEpisode(c *gin.Context) {
-	db := c.MustGet("db").(*gorm.DB)
-	id := c.Param("id")
-
-	var episode Episode
-	if err := db.First(&episode, id).Error; err != nil {
-		c.String(http.StatusNotFound, "Episode not found: %s", err.Error())
+func HandleLastAccessForEpisode(c *gjallarhorn.Context) {
+	id, err := c.ParamInt("id")
+	if err != nil {
+		c.String(http.StatusBadRequest, fmt.Sprintf("Invalid episode ID: %s", err.Error()))
 		return
 	}
 
-	episode.ResumeAt = c.Query("time")
-	result := db.Save(&episode)
-	if result.Error != nil {
-		c.String(http.StatusInternalServerError, "Error updating episode record: %s", result.Error.Error())
+	episode, err := repo.EpisodeRepository.FindByID(uint(id))
+	if err != nil {
+		c.String(http.StatusNotFound, fmt.Sprintf("Episode not found: %s", err.Error()))
 		return
 	}
 
-	var serie Series
-	if err := db.First(&serie, episode.SeriesID).Error; err != nil {
-		c.String(http.StatusNotFound, "Serie not found: %s", err.Error())
+	episode.ResumeAt = c.QueryParam("time")
+	err = repo.EpisodeRepository.Save(episode)
+	if err != nil {
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error updating episode record: %s", err.Error()))
 		return
 	}
 
-	serie.Episodes = []Episode{episode}
+	serie, err := repo.SeriesRepository.FindByID(episode.SeriesID)
+	if err != nil {
+		c.String(http.StatusNotFound, fmt.Sprintf("Serie not found: %s", err.Error()))
+		return
+	}
+
+	serie.Episodes = []entity.Episode{*episode}
 
 	jsonSerie, _ := json.Marshal(serie)
 	// append a type to the json object to differentiate between movie and serie
@@ -502,44 +566,51 @@ func HandleLastAccessForEpisode(c *gin.Context) {
 	UpdateUsageData(jsonSerie)
 }
 
-func HandleSetSeriesIndex(c *gin.Context) {
-	db := c.MustGet("db").(*gorm.DB)
-	id := c.Param("id")
-	indexStr := c.Query("index")
+func HandleSetSeriesIndex(c *gjallarhorn.Context) {
+	id, err := c.ParamInt("id")
+	if err != nil {
+		c.String(http.StatusBadRequest, fmt.Sprintf("Invalid serie ID: %s", err.Error()))
+		return
+	}
+	indexStr := c.QueryParam("index")
 	index, err := strconv.ParseUint(indexStr, 10, 64)
 	if err != nil {
-		c.String(http.StatusBadRequest, "Invalid index value: %s", err.Error())
+		c.String(http.StatusBadRequest, fmt.Sprintf("Invalid index: %s", err.Error()))
 		return
 	}
 
-	var serie Series
-	if err := db.First(&serie, id).Error; err != nil {
-		c.String(http.StatusNotFound, "Serie not found: %s", err.Error())
+	serie, err := repo.SeriesRepository.FindByID(uint(id))
+	if err != nil {
+		c.String(http.StatusNotFound, fmt.Sprintf("Serie not found: %s", err.Error()))
 		return
 	}
 
 	serie.CurrentIndex = uint(index)
-	result := db.Save(&serie)
-	if result.Error != nil {
-		c.String(http.StatusInternalServerError, "Error updating serie record: %s", result.Error.Error())
+	err = repo.SeriesRepository.Save(serie)
+	if err != nil {
+		c.String(http.StatusInternalServerError, fmt.Sprintf("Error updating serie record: %s", err.Error()))
 		return
 	}
+	c.JSON(http.StatusOK, serie)
 }
 
-func HandleGetLastEpisodeIndex(c *gin.Context) {
-	db := c.MustGet("db").(*gorm.DB)
-	id := c.Param("id")
-
-	var serie Series
-	if err := db.First(&serie, id).Error; err != nil {
-		c.String(http.StatusNotFound, "Serie not found: %s", err.Error())
+func HandleGetLastEpisodeIndex(c *gjallarhorn.Context) {
+	id, err := c.ParamInt("id")
+	if err != nil {
+		c.String(http.StatusBadRequest, fmt.Sprintf("Invalid serie ID: %s", err.Error()))
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"index": serie.CurrentIndex})
+	serie, err := repo.SeriesRepository.FindByID(uint(id))
+	if err != nil {
+		c.String(http.StatusNotFound, fmt.Sprintf("Serie not found: %s", err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, serie.CurrentIndex)
 }
 
-func MergeSortEpisodesByIndex(episodes *[]Episode) {
+func MergeSortEpisodesByIndex(episodes *[]entity.Episode) {
 	if len(*episodes) <= 1 {
 		return
 	}
@@ -554,9 +625,9 @@ func MergeSortEpisodesByIndex(episodes *[]Episode) {
 	*episodes = MergeEpisodes(left, right)
 }
 
-func MergeEpisodes(left, right []Episode) []Episode {
+func MergeEpisodes(left, right []entity.Episode) []entity.Episode {
 	size, i, j := len(left)+len(right), 0, 0
-	merged := make([]Episode, size)
+	merged := make([]entity.Episode, size)
 
 	for k := 0; k < size; k++ {
 		if i > len(left)-1 && j <= len(right)-1 {

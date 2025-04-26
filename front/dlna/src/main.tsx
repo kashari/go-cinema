@@ -8,8 +8,6 @@ import Management from "./components/Management";
 import SerieList from "./components/series/SerieList";
 import MovieList from "./components/movies/MovieList";
 import EpisodesList from "./components/series/EpisodesList";
-import Login from "./components/Login";
-import Signup from "./components/Signup";
 
 export const RootLayout: React.FC = () => {
   return (
@@ -21,14 +19,6 @@ export const RootLayout: React.FC = () => {
 };
 
 const router = createBrowserRouter([
-  {
-    path: "/login",
-    element: <Login />,
-  },
-  {
-    path: "/signup",
-    element: <Signup />,
-  },
   {
     path: "/",
     element: <RootLayout />,
