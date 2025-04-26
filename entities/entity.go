@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"log"
+	logger "go-cinema/file-logger"
 	"os"
 
 	"gorm.io/gorm"
@@ -45,7 +45,7 @@ type SeriesRequest struct {
 func ServeVideo(name string) (*os.File, error) {
 	file, err := os.Open(name)
 	if err != nil {
-		log.Println("Error opening video file", err)
+		logger.Error("Error opening video file", err)
 		return nil, err
 	}
 	return file, nil
@@ -63,7 +63,7 @@ func OpenNBytes(file *os.File, offset int64, n int64) ([]byte, error) {
 	buf := make([]byte, n)
 	_, err := file.ReadAt(buf, offset)
 	if err != nil {
-		log.Println("Error reading file", err)
+		logger.Error("Error reading file", err)
 		return nil, err
 	}
 	return buf, nil
@@ -73,12 +73,12 @@ func CopyNBytes(dst *os.File, src *os.File, n int64) (int64, error) {
 	buf := make([]byte, n)
 	nr, err := src.Read(buf)
 	if err != nil {
-		log.Println("Error reading file", err)
+		logger.Error("Error reading file", err)
 		return 0, err
 	}
 	nw, err := dst.Write(buf[:nr])
 	if err != nil {
-		log.Println("Error writing file", err)
+		logger.Error("Error writing file", err)
 		return 0, err
 	}
 	return int64(nw), nil
@@ -87,7 +87,7 @@ func CopyNBytes(dst *os.File, src *os.File, n int64) (int64, error) {
 func FileSeekNBytes(file *os.File, offset int64, whence int) (int64, error) {
 	n, err := file.Seek(offset, whence)
 	if err != nil {
-		log.Println("Error seeking file", err)
+		logger.Error("Error seeking file", err)
 		return 0, err
 	}
 	return n, nil
@@ -96,7 +96,7 @@ func FileSeekNBytes(file *os.File, offset int64, whence int) (int64, error) {
 func FileClose(file *os.File) error {
 	err := file.Close()
 	if err != nil {
-		log.Println("Error closing file", err)
+		logger.Error("Error closing file", err)
 		return err
 	}
 	return nil
@@ -125,7 +125,7 @@ func (o Option[T]) IsNone() bool {
 
 func (o Option[T]) Unwrap() T {
 	if o.None {
-		log.Println("Unwrap called on None option")
+		logger.Info("Unwrap called on None option")
 		return *new(T)
 	}
 	return o.Some

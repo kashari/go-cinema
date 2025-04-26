@@ -3,31 +3,32 @@ package main
 import (
 	"flag"
 	entity "go-cinema/entities"
+	logger "go-cinema/file-logger"
 	"go-cinema/model"
 	repo "go-cinema/repository"
 	"go-cinema/theatre"
-	"log"
 )
 
 type functionsMap map[string]func()
 
 func main() {
+	logger.Setup("/tmp/theatre.log")
 	db, err := theatre.InitDB()
 	if err != nil {
-		log.Fatal("Cannot connect to the database...")
+		logger.Error("Cannot connect to the database...")
 		return
 	}
 
 	functions := functionsMap{
 		"migrate": func() {
-			log.Println("Migrate is executing...")
+			logger.Info("Migrate is executing...")
 			if err != nil {
-				log.Printf("Cannot connect to the database due to: %v", err)
+				logger.Error("Cannot connect to the database due to: " + err.Error())
 			}
 
 			err = db.AutoMigrate(&model.User{}, &entity.Movie{}, &entity.Series{}, &entity.Episode{})
 			if err != nil {
-				log.Printf("Cannot map models to the database due to: %v", err)
+				logger.Error("Cannot map models to the database due to: " + err.Error())
 				return
 			}
 		},
@@ -39,10 +40,10 @@ func main() {
 	function := functions[*funcName]
 
 	if function != nil {
-		log.Printf("Executing function: %v", *funcName)
+		logger.Info("Executing function: " + *funcName)
 		// here the function gets executed if everything went well
 		function()
-		log.Println("Done.")
+		logger.Info("Function executed successfully")
 		return
 	}
 
@@ -52,9 +53,10 @@ func main() {
 
 	// Start the server on port 9090.
 	port := "9090"
-	log.Printf("Server starting on port %s", port)
+	logger.Info("Starting server on port: " + port)
 	if err := router.Start(port); err != nil {
-		log.Fatalf("Server failed: %v", err)
+		logger.Error("Failed to start server: " + err.Error())
+		return
 	}
 
 }

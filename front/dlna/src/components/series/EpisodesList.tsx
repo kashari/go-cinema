@@ -68,6 +68,7 @@ const EpisodesList: React.FC = () => {
       .then((response) => {
         console.debug(response);
         setCurrentIndex(response.data);
+        scrollToActiveEpisode();
       });
   }, [id]);
 
@@ -88,6 +89,20 @@ const EpisodesList: React.FC = () => {
     setCurrentEpisodePlaying(episodes[index - 1]);
     setVideoModal(true);
   };
+
+  const scrollToActiveEpisode = () => {
+    const activeEpisodeElement = document.querySelector(
+      `.yellow-border`
+    ) as HTMLElement;
+    if (activeEpisodeElement) {
+      console.debug("Scrolling to active episode...");
+      activeEpisodeElement.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+        inline: "nearest",
+      });
+    }
+  }
 
   const switchToNextEpisode = async () => {
     handleCloseVideoModal();

@@ -3,8 +3,8 @@ package filehandler
 import (
 	"encoding/json"
 	"fmt"
+	logger "go-cinema/file-logger"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -60,17 +60,17 @@ func MergeNames(left, right []FileRow) []FileRow {
 }
 
 func (f *FileHandler) ListFiles() []FileRow {
-	log.Println("Listing files in directory", f.Root)
+	logger.Info("Listing files in directory", f.Root)
 	dir, err := os.Open(f.Root)
 	if err != nil {
-		log.Println("Error opening directory", err)
+		logger.Error("Error opening directory", err)
 		return []FileRow{}
 	}
 	defer dir.Close()
 
 	files, err := dir.Readdir(-1)
 	if err != nil {
-		log.Println("Error reading directory", err)
+		logger.Error("Error reading directory", err)
 		return []FileRow{}
 	}
 
@@ -88,30 +88,30 @@ func (f *FileHandler) ListFiles() []FileRow {
 }
 
 func (f *FileHandler) DeleteFile(fileName string) error {
-	log.Println("Deleting file", fileName)
+	logger.Info("Deleting file", fileName)
 	err := os.Remove(f.Root + "/" + fileName)
 	if err != nil {
-		log.Println("Error deleting file", err)
+		logger.Error("Error deleting file", err)
 		return err
 	}
 	return nil
 }
 
 func (f *FileHandler) GetFile(fileName string) (*os.File, error) {
-	log.Println("Opening file", fileName)
+	logger.Info("Opening file", fileName)
 	file, err := os.Open(f.Root + "/" + fileName)
 	if err != nil {
-		log.Println("Error opening file", err)
+		logger.Error("Error opening file", err)
 		return nil, err
 	}
 	return file, nil
 }
 
 func (f *FileHandler) DownloadFromInternet(url string) error {
-	log.Println("Downloading file from", url)
+	logger.Info("Downloading file from", url)
 	response, err := http.Get(url)
 	if err != nil {
-		log.Println("Error downloading file", err)
+		logger.Error("Error downloading file", err)
 		return err
 	}
 	defer response.Body.Close()
@@ -120,7 +120,7 @@ func (f *FileHandler) DownloadFromInternet(url string) error {
 
 	out, err := os.Create(f.Root + "/" + fileName)
 	if err != nil {
-		log.Println("Error creating file", err)
+		logger.Error("Error creating file", err)
 		return err
 	}
 	defer out.Close()
@@ -136,13 +136,13 @@ func (f *FileHandler) DownloadFromInternet(url string) error {
 	for {
 		n, err := response.Body.Read(buffer)
 		if err != nil && err != io.EOF {
-			log.Println("Error reading response body", err)
+			logger.Error("Error reading response body", err)
 			return err
 		}
 
 		_, err = out.Write(buffer[:n])
 		if err != nil {
-			log.Println("Error writing to file", err)
+			logger.Error("Error writing to file", err)
 			return err
 		}
 
@@ -158,7 +158,7 @@ func (f *FileHandler) DownloadFromInternet(url string) error {
 
 	downloadProgress.Delete(url)
 
-	log.Println("File downloaded successfully")
+	logger.Info("File downloaded successfully")
 	return nil
 }
 
@@ -194,10 +194,10 @@ func (f *FileHandler) PercentagePollerOnFile(url string) int64 {
 }
 
 func (f *FileHandler) ServeVideoFile(name string) (*os.File, error) {
-	log.Println("Serving video file", name)
+	logger.Info("Serving video file", name)
 	file, err := os.Open(f.Root + "/" + name)
 	if err != nil {
-		log.Println("Error opening video file", err)
+		logger.Error("Error opening video file", err)
 		return nil, err
 	}
 	return file, nil
@@ -257,7 +257,7 @@ func (f *FileHandler) ServeFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println("File served successfully")
+	logger.Info("File served successfully")
 	return
 }
 
@@ -295,7 +295,7 @@ func (f *FileHandler) UploadFile(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("File uploaded successfully"))
-	log.Println("File uploaded successfully")
+	logger.Info("File uploaded successfully")
 }
 
 func (f *FileHandler) ServeContentViaHttp(w http.ResponseWriter, r *http.Request) {
@@ -352,7 +352,7 @@ func (f *FileHandler) ServeContentViaHttp(w http.ResponseWriter, r *http.Request
 
 	http.ServeContent(w, r, fileName, mod_time, file)
 
-	log.Println("File served successfully")
+	logger.Info("File served successfully")
 	return
 }
 

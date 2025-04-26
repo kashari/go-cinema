@@ -37,6 +37,30 @@ const MoviePlayer: React.FC<VideoPlayerProps> = ({
     [fileName, movieId]
   );
 
+  const handleBackGoroutine = useCallback(async () => {
+    const response = await axios.post(
+      `http://192.168.3.200:9090/start-cronos?interval=@every 10m`
+    );
+
+    if (response.status === 200) {
+      console.debug("Goroutine started successfully");
+    } else {
+      console.error("Failed to start goroutine");
+    }
+  }, []);
+
+  const handleBackGoroutineStop = useCallback(async () => {
+      const response = await axios.post(
+        `http://192.168.3.200:9090/stop-cronos`
+      );
+  
+      if (response.status === 200) {
+        console.debug("Goroutine stopped successfully");
+      } else {
+        console.error("Failed to stop goroutine");
+      }
+    }, []);
+
   const handleSkipToWhereYouLeft = useCallback(() => {
     if (videoRef.current && leftAt !== "00:00") {
       const [minutes, seconds] = leftAt.split(":");
@@ -50,6 +74,8 @@ const MoviePlayer: React.FC<VideoPlayerProps> = ({
 
     if (!videoElement) return;
 
+    handleBackGoroutine();
+
     setTimeout(() => {
       handleSkipToWhereYouLeft();
       videoElement.requestFullscreen();
@@ -62,6 +88,7 @@ const MoviePlayer: React.FC<VideoPlayerProps> = ({
 
     return () => {
       clearInterval(timeShifter);
+      handleBackGoroutineStop();
       handleLastVideoOpenData(videoElement.currentTime);
       setTimeout(() => {
         onClose();
