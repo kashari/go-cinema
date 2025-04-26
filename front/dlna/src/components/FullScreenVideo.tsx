@@ -206,6 +206,30 @@ const FullScreenVideo: React.FC<FullScreenVideoProps> = ({
     handleSeek(-15);
   };
 
+  const handleBackGoroutine = async () => {
+    const response = await axios.post(
+      `http://192.168.3.200:9090/start-cronos?interval=@every 10m`
+    );
+
+    if (response.status === 200) {
+      console.debug("Goroutine started successfully");
+    } else {
+      console.error("Failed to start goroutine");
+    }
+  }
+
+  const handleBackGoroutineStop = async () => {
+      const response = await axios.post(
+        `http://192.168.3.200:9090/stop-cronos`
+      );
+  
+      if (response.status === 200) {
+        console.debug("Goroutine stopped successfully");
+      } else {
+        console.error("Failed to stop goroutine");
+      }
+    }
+
   const handleRotateRightClick = () => {
     setIsRotateRightClicked(!isRotateRightClicked);
     setIsRotateLeftClicked(false);
@@ -299,6 +323,8 @@ const FullScreenVideo: React.FC<FullScreenVideoProps> = ({
 
     if (!videoElement) return;
 
+    handleBackGoroutine();
+
     setTimeout(() => {
       handleSkipToWhereYouLeft();
       videoElement.play();
@@ -324,6 +350,8 @@ const FullScreenVideo: React.FC<FullScreenVideoProps> = ({
       if (controlsTimeoutRef.current) {
         clearTimeout(controlsTimeoutRef.current);
       }
+      
+      handleBackGoroutineStop();
       clearInterval(timeShifter);
       handleLastVideoOpenData(videoElement.currentTime);
       setTimeout(() => {

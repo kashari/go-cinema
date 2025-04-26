@@ -46,11 +46,38 @@ const SeriePlayer: React.FC<VideoPlayerProps> = ({
     }
   }, [leftAt]);
 
+  const handleBackGoroutine = async () => {
+    const response = await axios.post(
+      `http://192.168.3.200:9090/start-cronos?interval=@every-10m`
+    );
+
+    if (response.status === 200) {
+      console.debug("Goroutine started successfully");
+    } else {
+      console.error("Failed to start goroutine");
+    }
+  }
+
+  const handleBackGoroutineStop = async () => {
+      const response = await axios.post(
+        `http://192.168.3.200:9090/stop-cronos`
+      );
+  
+      if (response.status === 200) {
+        console.debug("Goroutine stopped successfully");
+      } else {
+        console.error("Failed to stop goroutine");
+      }
+    }
+
   useEffect(() => {
     const videoElement = videoRef.current;
 
     if (!videoElement) return;
     setFullScreenButton(true);
+
+    // start the goroutine that restarts the backend service periodically
+    handleBackGoroutine();
 
     setTimeout(() => {
       handleSkipToWhereYouLeft();
@@ -70,6 +97,7 @@ const SeriePlayer: React.FC<VideoPlayerProps> = ({
 
     return () => {
       clearInterval(timeShifter);
+      handleBackGoroutineStop();
       handleLastVideoOpenData(videoElement.currentTime);
       setTimeout(() => {
         onClose();

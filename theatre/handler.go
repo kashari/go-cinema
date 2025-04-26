@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	entity "go-cinema/entities"
+	logger "go-cinema/file-logger"
 	repo "go-cinema/repository"
 	videostream "go-cinema/video"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -164,7 +164,7 @@ func GetMovie(c *gjallarhorn.Context) {
 
 func VideoStreamer(c *gjallarhorn.Context) {
 	fileName := c.QueryParam("file")
-	log.Println("Serving video file:", fileName)
+	logger.Info("Serving video file:", fileName)
 
 	err := videostream.StreamVideo(c.Writer, c.Request, fileName)
 	if err != nil {
@@ -176,7 +176,7 @@ func VideoStreamer(c *gjallarhorn.Context) {
 
 func VideoServerHandler(c *gjallarhorn.Context) {
 	fileName := c.QueryParam("file")
-	log.Println("Serving video file:", fileName)
+	logger.Info("Serving video file:", fileName)
 
 	file, err := entity.ServeVideo(fileName)
 	if err != nil {
@@ -196,7 +196,7 @@ func handleRangeRequests(w http.ResponseWriter, r *http.Request, file *os.File, 
 		w.Header().Set("Content-Length", strconv.FormatInt(fileSize, 10))
 		fileInfo, err := file.Stat()
 		if err != nil {
-			log.Println("Error getting file info", err)
+			logger.Error("Error getting file info", err)
 			return
 		}
 		http.ServeContent(w, r, file.Name(), fileInfo.ModTime(), file)
@@ -205,7 +205,7 @@ func handleRangeRequests(w http.ResponseWriter, r *http.Request, file *os.File, 
 
 	fileInfo, err := file.Stat()
 	if err != nil {
-		log.Println("Error getting file info", err)
+		logger.Error("Error getting file info", err)
 		return
 	}
 
@@ -266,10 +266,10 @@ func GetUsageData(c *gjallarhorn.Context) {
 }
 
 func GetFile(fileName string) (*os.File, error) {
-	log.Println("Opening file", fileName)
+	logger.Info("Opening file", fileName)
 	file, err := os.Open(fileName)
 	if err != nil {
-		log.Println("Error opening file", err)
+		logger.Error("Error opening file", err)
 		return nil, err
 	}
 	return file, nil
