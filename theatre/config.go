@@ -32,7 +32,7 @@ func CORSMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 func SetupRoutes(db *gorm.DB) *gjallarhorn.Router {
 
-	r := gjallarhorn.Heimdallr().WithFileLogging("/tmp/theatre-http.log").WithRateLimiter(100, 1*time.Second).WithWorkerPool(10)
+	r := gjallarhorn.Heimdallr().WithFileLogging("/tmp/theatre.log").WithRateLimiter(100, 1*time.Second).WithWorkerPool(10)
 	r.Use(CORSMiddleware)
 
 	r.POST("/movies/create", CreateMovie)

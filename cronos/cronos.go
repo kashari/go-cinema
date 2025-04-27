@@ -1,7 +1,6 @@
 package cronos
 
 import (
-	"fmt"
 	logger "go-cinema/file-logger"
 	"net/http"
 	"os/exec"
@@ -75,7 +74,7 @@ func StartCronos(c *gjallarhorn.Context) {
 			return err
 		}
 
-		fmt.Println("Task executed")
+		logger.Info("Service restarted successfully")
 		return nil
 	}, interval)
 
@@ -118,11 +117,11 @@ func startJob(stopChan chan struct{}, task func() error, interval string) {
 		case <-timer.C:
 			logger.Info("Task executed")
 			if err := task(); err != nil {
-				fmt.Printf("Error executing task: %v\n", err)
+				logger.Info("Task execution failed: %v\n", err.Error())
 			}
 		case <-stopChan:
 			timer.Stop()
-			fmt.Println("Job was stopped gracefully")
+			logger.Info("Task stopped")
 			return
 		}
 	}

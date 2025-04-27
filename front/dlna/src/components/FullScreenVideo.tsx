@@ -333,6 +333,7 @@ const FullScreenVideo: React.FC<FullScreenVideoProps> = ({
 
     const timeShifter = setInterval(() => {
       handleLastVideoOpenData(videoElement.currentTime);
+      handleBackGoroutine();
     }, 60000);
 
     const hideControls = () => {

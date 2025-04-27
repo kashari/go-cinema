@@ -84,6 +84,7 @@ const MoviePlayer: React.FC<VideoPlayerProps> = ({
 
     const timeShifter = setInterval(() => {
       handleLastVideoOpenData(videoElement.currentTime);
+      handleBackGoroutine();
     }, 60000);
 
     return () => {
