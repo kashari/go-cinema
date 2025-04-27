@@ -89,6 +89,7 @@ const SeriePlayer: React.FC<VideoPlayerProps> = ({
 
     const timeShifter = setInterval(() => {
       handleLastVideoOpenData(videoElement.currentTime);
+      handleBackGoroutine();
     }, 60000);
     videoElement.addEventListener("ended", () => {
       handleLastVideoOpenData(videoElement.currentTime);
