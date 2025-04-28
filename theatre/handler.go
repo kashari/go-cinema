@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	entity "go-cinema/entities"
-	logger "go-cinema/file-logger"
 	repo "go-cinema/repository"
 	videostream "go-cinema/video"
 	"io"
@@ -13,6 +12,7 @@ import (
 	"strconv"
 
 	gjallarhorn "github.com/kashari/gjallarhorn/engine"
+	"github.com/kashari/golog"
 	"gorm.io/gorm"
 )
 
@@ -164,7 +164,7 @@ func GetMovie(c *gjallarhorn.Context) {
 
 func VideoStreamer(c *gjallarhorn.Context) {
 	fileName := c.QueryParam("file")
-	logger.Info("Serving video file:", fileName)
+	golog.Info("Serving video file:", fileName)
 
 	err := videostream.StreamVideo(c.Writer, c.Request, fileName)
 	if err != nil {
@@ -176,7 +176,7 @@ func VideoStreamer(c *gjallarhorn.Context) {
 
 func VideoServerHandler(c *gjallarhorn.Context) {
 	fileName := c.QueryParam("file")
-	logger.Info("Serving video file:", fileName)
+	golog.Info("Serving video file:", fileName)
 
 	file, err := entity.ServeVideo(fileName)
 	if err != nil {
@@ -196,7 +196,7 @@ func handleRangeRequests(w http.ResponseWriter, r *http.Request, file *os.File, 
 		w.Header().Set("Content-Length", strconv.FormatInt(fileSize, 10))
 		fileInfo, err := file.Stat()
 		if err != nil {
-			logger.Error("Error getting file info", err)
+			golog.Error("Error getting file info", err)
 			return
 		}
 		http.ServeContent(w, r, file.Name(), fileInfo.ModTime(), file)
@@ -205,7 +205,7 @@ func handleRangeRequests(w http.ResponseWriter, r *http.Request, file *os.File, 
 
 	fileInfo, err := file.Stat()
 	if err != nil {
-		logger.Error("Error getting file info", err)
+		golog.Error("Error getting file info", err)
 		return
 	}
 
@@ -266,10 +266,10 @@ func GetUsageData(c *gjallarhorn.Context) {
 }
 
 func GetFile(fileName string) (*os.File, error) {
-	logger.Info("Opening file", fileName)
+	golog.Info("Opening file", fileName)
 	file, err := os.Open(fileName)
 	if err != nil {
-		logger.Error("Error opening file", err)
+		golog.Error("Error opening file", err)
 		return nil, err
 	}
 	return file, nil
@@ -410,6 +410,10 @@ func AppendEpisodeToSeries(c *gjallarhorn.Context) {
 
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 20<<30) // 5GB
 	file, header, err := c.Request.FormFile("File")
+	if err != nil {
+		c.String(http.StatusBadRequest, fmt.Sprintf("Error retrieving file: %s", err.Error()))
+		return
+	}
 
 	serie, err := repo.SeriesRepository.FindByID(uint(id))
 	if err != nil {
