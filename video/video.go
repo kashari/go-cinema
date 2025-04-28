@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	logger "go-cinema/file-logger"
 	"io"
 	"mime"
 	"net/http"
@@ -14,6 +13,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/kashari/golog"
 )
 
 const (
@@ -93,7 +94,7 @@ func cleanupCache() {
 
 		for path, entry := range fileCache {
 			// Remove entries older than cache TTL
-			logger.Info(fmt.Sprintf("Cleaning up cache for %s, last used: %s", path, entry.lastUsed))
+			golog.Info(fmt.Sprintf("Cleaning up cache for %s, last used: %s", path, entry.lastUsed))
 			if now.Sub(entry.lastUsed) > 10*time.Minute {
 				delete(fileCache, path)
 			}
@@ -455,7 +456,7 @@ func chunkedRangeFileCopy(w http.ResponseWriter, file *os.File, start, end int64
 			// Write to response
 			written, writeErr := fw.Write(buffer[:n])
 			if writeErr != nil {
-				logger.Error(fmt.Sprintf("write error: %v", writeErr))
+				golog.Error("write error: {}", writeErr)
 				return writeErr
 			}
 
@@ -463,7 +464,7 @@ func chunkedRangeFileCopy(w http.ResponseWriter, file *os.File, start, end int64
 			totalWritten += int64(written)
 
 			if time.Since(lastLogTime) > 5*time.Second {
-				logger.Info(fmt.Sprintf("Wrote %d bytes, remaining %d bytes", totalWritten, remaining))
+				golog.Info("Wrote {} bytes, remaining {} bytes", totalWritten, remaining)
 				lastLogTime = time.Now()
 			}
 
@@ -488,7 +489,7 @@ func chunkedRangeFileCopy(w http.ResponseWriter, file *os.File, start, end int64
 	}
 
 	if totalWritten != expectedBytes {
-		logger.Info(fmt.Sprintf("Warning: expected %d bytes, but wrote %d bytes", expectedBytes, totalWritten))
+		golog.Info("Warning: expected {} bytes, but wrote {} bytes", expectedBytes, totalWritten)
 
 	}
 	return nil

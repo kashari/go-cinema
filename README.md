@@ -78,7 +78,7 @@ This project provides a user-friendly DLNA (Digital Living Network Alliance) fro
 - **index.html:** Base HTML template
 - **io/file-handler.go:** Implements file handling logic in Go
 - **main.go:** Entry point for the Go backend service
-- **middlewares/logger.go:** Example middleware implementation for Go logging
+- **middlewares/golog.go:** Example middleware implementation for Go logging
 - **LICENSE:** Contains the software license information
 
 **License**

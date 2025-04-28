@@ -4,13 +4,16 @@ go 1.23.6
 
 toolchain go1.23.8
 
-require golang.org/x/sync v0.13.0
+require (
+	github.com/kashari/golog v1.0.0
+	golang.org/x/sync v0.13.0
+)
 
 require github.com/stretchr/testify v1.9.0 // indirect
 
 require (
 	github.com/armon/go-radix v1.0.0 // indirect
-	github.com/kashari/gjallarhorn v1.1.0
+	github.com/kashari/gjallarhorn v1.2.0
 )
 
 require (

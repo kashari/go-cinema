@@ -3,32 +3,33 @@ package main
 import (
 	"flag"
 	entity "go-cinema/entities"
-	logger "go-cinema/file-logger"
 	"go-cinema/model"
 	repo "go-cinema/repository"
 	"go-cinema/theatre"
+
+	"github.com/kashari/golog"
 )
 
 type functionsMap map[string]func()
 
 func main() {
-	logger.Setup("/tmp/theatre.log")
+	golog.Init("/tmp/theatre.log")
 	db, err := theatre.InitDB()
 	if err != nil {
-		logger.Error("Cannot connect to the database...")
+		golog.Error("Cannot connect to the database...")
 		return
 	}
 
 	functions := functionsMap{
 		"migrate": func() {
-			logger.Info("Migrate is executing...")
+			golog.Info("Migrate is executing...")
 			if err != nil {
-				logger.Error("Cannot connect to the database due to: " + err.Error())
+				golog.Error("Cannot connect to the database due to: " + err.Error())
 			}
 
 			err = db.AutoMigrate(&model.User{}, &entity.Movie{}, &entity.Series{}, &entity.Episode{})
 			if err != nil {
-				logger.Error("Cannot map models to the database due to: " + err.Error())
+				golog.Error("Cannot map models to the database due to: " + err.Error())
 				return
 			}
 		},
@@ -40,10 +41,9 @@ func main() {
 	function := functions[*funcName]
 
 	if function != nil {
-		logger.Info("Executing function: " + *funcName)
-		// here the function gets executed if everything went well
+		golog.Info("Executing function: " + *funcName)
 		function()
-		logger.Info("Function executed successfully")
+		golog.Info("Function executed successfully")
 		return
 	}
 
@@ -51,11 +51,10 @@ func main() {
 
 	router := theatre.SetupRoutes(db)
 
-	// Start the server on port 9090.
 	port := "9090"
-	logger.Info("Starting server on port: " + port)
+	golog.Info("Starting server on port: " + port)
 	if err := router.Start(port); err != nil {
-		logger.Error("Failed to start server: " + err.Error())
+		golog.Error("Failed to start server: " + err.Error())
 		return
 	}
 

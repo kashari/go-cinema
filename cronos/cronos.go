@@ -1,13 +1,13 @@
 package cronos
 
 import (
-	logger "go-cinema/file-logger"
 	"net/http"
 	"os/exec"
 	"sync"
 	"time"
 
 	gjallarhorn "github.com/kashari/gjallarhorn/engine"
+	"github.com/kashari/golog"
 )
 
 var (
@@ -70,11 +70,11 @@ func StartCronos(c *gjallarhorn.Context) {
 
 		cmd := exec.Command("systemctl", "restart", "GoCinema.service")
 		if err := cmd.Run(); err != nil {
-			logger.Info("Failed to restart service: %v\n", err.Error())
+			golog.Info("Failed to restart service: %v\n", err.Error())
 			return err
 		}
 
-		logger.Info("Service restarted successfully")
+		golog.Info("Service restarted successfully")
 		return nil
 	}, interval)
 
@@ -115,13 +115,13 @@ func startJob(stopChan chan struct{}, task func() error, interval string) {
 
 		select {
 		case <-timer.C:
-			logger.Info("Task executed")
+			golog.Info("Task executed")
 			if err := task(); err != nil {
-				logger.Info("Task execution failed: %v\n", err.Error())
+				golog.Info("Task execution failed: {}", err.Error())
 			}
 		case <-stopChan:
 			timer.Stop()
-			logger.Info("Task stopped")
+			golog.Info("Task stopped")
 			return
 		}
 	}
