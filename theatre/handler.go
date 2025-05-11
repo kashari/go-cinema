@@ -473,7 +473,9 @@ func GetUsageData(w http.ResponseWriter, r *http.Request) {
 	}
 	file, err := os.Open(usageData)
 	if err != nil {
-		fmt.Println("Something went wrong reading the data: ", err)
+		golog.Error("Error opening file: {}", err)
+		http.Error(w, fmt.Sprintf("Error opening file: %s", err.Error()), http.StatusInternalServerError)
+		return
 	}
 
 	defer file.Close()
@@ -494,8 +496,8 @@ func GetFile(fileName string) (*os.File, error) {
 	golog.Info("Opening file: ", fileName)
 	file, err := os.Open(fileName)
 	if err != nil {
-		golog.Error("Error opening file: ", err)
-		return nil, err
+		golog.Error("Error opening file: {}", err)
+		return nil, fmt.Errorf("error opening file: %w", err)
 	}
 	return file, nil
 }
