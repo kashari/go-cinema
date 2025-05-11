@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"sync"
 	"time"
-
+  
 	"github.com/kashari/golog"
 )
 
@@ -124,7 +124,7 @@ func startJob(stopChan chan struct{}, task func() error, interval string) {
 		case <-timer.C:
 			golog.Info("Task executed")
 			if err := task(); err != nil {
-				golog.Info("Task execution failed: %v\n", err.Error())
+				golog.Info("Task execution failed: {}", err.Error())
 			}
 		case <-stopChan:
 			timer.Stop()

@@ -4,11 +4,15 @@ go 1.23.6
 
 toolchain go1.23.8
 
-require golang.org/x/sync v0.13.0
+require (
+	github.com/kashari/golog v1.0.0
+	golang.org/x/sync v0.13.0
+)
 
 require github.com/stretchr/testify v1.9.0 // indirect
 
 require (
+
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect

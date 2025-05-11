@@ -25,10 +25,6 @@ func main() {
 	functions := functionsMap{
 		"migrate": func() {
 			golog.Info("Running migration")
-			if err != nil {
-				golog.Error("Cannot connect to the database due to: " + err.Error())
-				return
-			}
 
 			err = db.AutoMigrate(&model.User{}, &entity.Movie{}, &entity.Series{}, &entity.Episode{})
 			if err != nil {
@@ -66,7 +62,6 @@ func main() {
 			gjållårhðrñ - A simple HTTP router for Go
 	`
 
-	// Start the server on port 9090.
 	port := "9090"
 	golog.Info(logo)
 	golog.Info("Started server on port {}", port)
