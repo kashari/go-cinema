@@ -5,8 +5,7 @@ import (
 	"os/exec"
 	"sync"
 	"time"
-
-	gjallarhorn "github.com/kashari/gjallarhorn/engine"
+  
 	"github.com/kashari/golog"
 )
 
@@ -45,14 +44,16 @@ var (
 // before executing the task again.
 //
 // Here i will be using this in a single scenario but it can be enhanced to be used in multiple scenarios.
-func StartCronos(c *gjallarhorn.Context) {
-	interval := c.QueryParam("interval")
+func StartCronos(w http.ResponseWriter, r *http.Request) {
+	interval := r.URL.Query().Get("interval")
 	if interval == "" {
-		c.String(http.StatusBadRequest, "Interval is required")
+		golog.Error("Interval not provided")
+		http.Error(w, "Interval not provided", http.StatusBadRequest)
 		return
 	}
 	if _, ok := cronMap[interval]; !ok {
-		c.String(http.StatusBadRequest, "Invalid interval")
+		golog.Error("Invalid interval provided")
+		http.Error(w, "Invalid interval provided", http.StatusBadRequest)
 		return
 	}
 
@@ -60,7 +61,8 @@ func StartCronos(c *gjallarhorn.Context) {
 	defer mu.Unlock()
 
 	if running {
-		c.String(http.StatusBadRequest, "Job is already running")
+		golog.Error("Job is already running")
+		http.Error(w, "Job is already running", http.StatusBadRequest)
 		return
 	}
 
@@ -79,7 +81,9 @@ func StartCronos(c *gjallarhorn.Context) {
 	}, interval)
 
 	running = true
-	c.String(http.StatusOK, "Job started successfully")
+	golog.Info("Job started successfully")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Job started successfully"))
 }
 
 // StopCronos stops the cron job if it is running.
@@ -95,18 +99,21 @@ func StartCronos(c *gjallarhorn.Context) {
 // concurrent access to the running variable.
 // It is also important to handle the case where the job is not running
 // to avoid sending a signal to a nil channel.
-func StopCronos(c *gjallarhorn.Context) {
+func StopCronos(w http.ResponseWriter, r *http.Request) {
 	mu.Lock()
 	defer mu.Unlock()
 
 	if !running {
-		c.String(http.StatusBadRequest, "Job is not running")
+		golog.Error("Job is not running")
+		http.Error(w, "Job is not running", http.StatusBadRequest)
 		return
 	}
 
 	close(stopTaskChan)
 	running = false
-	c.String(http.StatusOK, "Job stopped successfully")
+	golog.Info("Job stopped successfully")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Job stopped successfully"))
 }
 
 func startJob(stopChan chan struct{}, task func() error, interval string) {

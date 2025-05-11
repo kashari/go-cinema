@@ -6,6 +6,8 @@ import (
 	"go-cinema/model"
 	repo "go-cinema/repository"
 	"go-cinema/theatre"
+	"net/http"
+	"time"
 
 	"github.com/kashari/golog"
 )
@@ -16,20 +18,17 @@ func main() {
 	golog.Init("/tmp/theatre.log")
 	db, err := theatre.InitDB()
 	if err != nil {
-		golog.Error("Cannot connect to the database...")
+		golog.Error("Cannot connect to the database due to: {}", err.Error())
 		return
 	}
 
 	functions := functionsMap{
 		"migrate": func() {
-			golog.Info("Migrate is executing...")
-			if err != nil {
-				golog.Error("Cannot connect to the database due to: " + err.Error())
-			}
+			golog.Info("Running migration")
 
 			err = db.AutoMigrate(&model.User{}, &entity.Movie{}, &entity.Series{}, &entity.Episode{})
 			if err != nil {
-				golog.Error("Cannot map models to the database due to: " + err.Error())
+				golog.Error("Failed to run migration: {}", err.Error())
 				return
 			}
 		},
@@ -41,7 +40,8 @@ func main() {
 	function := functions[*funcName]
 
 	if function != nil {
-		golog.Info("Executing function: " + *funcName)
+		golog.Info("Executing function: {}", *funcName)
+		// here the function gets executed if everything went well
 		function()
 		golog.Info("Function executed successfully")
 		return
@@ -49,13 +49,31 @@ func main() {
 
 	repo.InitRepositories(db)
 
-	router := theatre.SetupRoutes(db)
+	router := theatre.SetupRoutes()
+
+	logo := `
+            __       .__  .__               .__                          
+   ____    |__|____  |  | |  | _____ _______|  |__   ___________  ____   
+  / ___\   |  \__  \ |  | |  | \__  \\_  __ \  |  \ /  _ \_  __ \/    \  
+ / /_/  >  |  |/ __ \|  |_|  |__/ __ \|  | \/   Y  (  <_> )  | \/   |  \ 
+ \___  /\__|  (____  /____/____(____  /__|  |___|  /\____/|__|  |___|  / 
+/_____/\______|    \/               \/           \/                  \/  
+
+			gjållårhðrñ - A simple HTTP router for Go
+	`
 
 	port := "9090"
-	golog.Info("Starting server on port: " + port)
-	if err := router.Start(port); err != nil {
-		golog.Error("Failed to start server: " + err.Error())
-		return
+	golog.Info(logo)
+	golog.Info("Started server on port {}", port)
+
+	server := &http.Server{
+		Addr:         ":9090",
+		Handler:      router, // Use the ServeMux
+		ReadTimeout:  60 * time.Second,
+		WriteTimeout: 60 * time.Second,
 	}
 
+	if err := server.ListenAndServe(); err != nil {
+		golog.Error("Failed to start server: {}", err.Error())
+	}
 }

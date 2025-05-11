@@ -22,7 +22,7 @@ const SerieList: React.FC = () => {
 
   const onSerieSubmit: SubmitHandler<SerieInputs> = (data) => {
     axios
-      .put(`http://192.168.3.200:9090/series/${updatingSerie?.ID}`, data)
+      .put(`http://192.168.3.200:9090/series/${updatingSerie?.ID}/update`, data)
       .then((response) => {
         console.debug(response);
       })
@@ -62,7 +62,7 @@ const SerieList: React.FC = () => {
 
   const handleDelete = (id: string) => {
     axios
-      .delete(`http://192.168.3.200:9090/series/${id}`)
+      .delete(`http://192.168.3.200:9090/series/${id}/delete`)
       .then((response) => {
         console.debug(response);
         handleFetchSeries();

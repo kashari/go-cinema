@@ -64,7 +64,7 @@ const EpisodesList: React.FC = () => {
 
   const handleGetCurrentEpisodeIndex = useCallback(async () => {
     axios
-      .get(`http://192.168.3.200:9090/series/${id}/current`)
+      .get(`http://192.168.3.200:9090/series/${id}/current/get`)
       .then((response) => {
         console.debug(response);
         setCurrentIndex(response.data);
@@ -74,7 +74,7 @@ const EpisodesList: React.FC = () => {
 
   const handleSetCurrentEpisodeIndex = async (index: number) => {
     axios
-      .post(`http://192.168.3.200:9090/series/${id}/current?index=${index}`)
+      .post(`http://192.168.3.200:9090/series/${id}/current/set?index=${index}`)
       .then((response) => {
         console.debug(response);
       });

@@ -3,9 +3,7 @@ package theatre
 import (
 	"go-cinema/cronos"
 	"net/http"
-	"time"
 
-	gjallarhorn "github.com/kashari/gjallarhorn/engine"
 	dbs "github.com/misenkashari/goutils/db"
 	"gorm.io/gorm"
 )
@@ -30,38 +28,35 @@ func CORSMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func SetupRoutes(db *gorm.DB) *gjallarhorn.Router {
+func SetupRoutes() http.Handler {
+	router := NewRouter()
 
-	r := gjallarhorn.Heimdallr().WithFileLogging("/tmp/theatre.log").WithRateLimiter(100, 1*time.Second).WithWorkerPool(10)
-	r.Use(CORSMiddleware)
+	router.POST("/movies/create", CreateMovieLegacy)
+	router.POST("/movie_special", CreateMovieSpecial)
+	router.PUT("/movies/:id/update", EditMovie)
+	router.GET("/movies", GetMovies)
+	router.GET("/movies/:id", GetMovie)
+	router.DELETE("/movies/:id/delete", DeleteMovie)
 
-	r.POST("/movies/create", CreateMovie)
-	r.POST("/movie_special", CreateMovieSpecial)
-	r.PUT("/movies/:id", EditMovie)
-	r.GET("/movies", GetMovies)
-	r.GET("/movies/:id", GetMovie)
-	r.DELETE("/movies/:id", DeleteMovie)
+	router.GET("/video", VideoServerHandler)
+	router.POST("/last-access/:id", HandleLastAccessForMovie)
+	router.GET("/left-at", GetUsageData)
 
-	r.GET("/video", VideoStreamer)
-	r.GET("/video/legacy", VideoServerHandler)
-	r.POST("/last-access/:id", HandleLastAccessForMovie)
-	r.GET("/left-at", GetUsageData)
+	router.GET("/series", ListSeries)
+	router.POST("/series/create", CreateSerie)
+	router.GET("/series/:id", GetSerie)
+	router.PUT("/series/:id/update", EditSerie)
+	router.DELETE("/series/:id/delete", DeleteSerie)
+	router.POST("/series/:id/append", AppendEpisodeToSeries)
+	router.POST("/series/:id/special", AppendEpisodeToSeriesSpecial)
+	router.GET("/series/:id/episodes", GetSerieEpisodes)
 
-	r.GET("/series", ListSeries)
-	r.POST("/series/create", CreateSerie)
-	r.GET("/series/:id", GetSerie)
-	r.PUT("/series/:id", EditSerie)
-	r.DELETE("/series/:id", DeleteSerie)
-	r.POST("/series/:id/append", AppendEpisodeToSeries)
-	r.POST("/series/:id/special", AppendEpisodeToSeriesSpecial)
-	r.GET("/series/:id/episodes", GetSerieEpisodes)
+	router.POST("/episodes/:id/last-access", HandleLastAccessForEpisode)
+	router.POST("/series/:id/current/set", HandleSetSeriesIndex)
+	router.GET("/series/:id/current/get", HandleGetLastEpisodeIndex)
 
-	r.POST(("/episodes/:id/last-access"), HandleLastAccessForEpisode)
-	r.POST("/series/:id/current", HandleSetSeriesIndex)
-	r.GET("/series/:id/current", HandleGetLastEpisodeIndex)
+	router.POST("/start-cronos", cronos.StartCronos)
+	router.POST("/stop-cronos", cronos.StopCronos)
 
-	r.POST("/start-cronos", cronos.StartCronos)
-	r.POST("/stop-cronos", cronos.StopCronos)
-
-	return r
+	return router
 }
