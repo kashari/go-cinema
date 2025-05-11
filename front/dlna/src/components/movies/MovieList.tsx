@@ -22,7 +22,7 @@ const MovieList: React.FC = () => {
 
   const onMovieSubmit: SubmitHandler<MovieInputs> = (data) => {
     axios
-      .put(`http://192.168.3.200:9090/movies/${updatingMovie?.ID}`, data)
+      .put(`http://192.168.3.200:9090/movies/${updatingMovie?.ID}/update`, data)
       .then((response) => {
         console.log(response);
       })
@@ -77,7 +77,7 @@ const MovieList: React.FC = () => {
 
   const handleDelete = (id: string) => {
     axios
-      .delete(`http://192.168.3.200:9090/movies/${id}`)
+      .delete(`http://192.168.3.200:9090/movies/${id}/delete`)
       .then((response) => {
         console.log(response);
         handleFetchMovies();
